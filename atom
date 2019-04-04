@@ -1,0 +1,67 @@
+# Your keymap
+#
+# Atom keymaps work similarly to style sheets. Just as style sheets use
+# selectors to apply styles to elements, Atom keymaps use selectors to associate
+# keystrokes with events in specific contexts. Unlike style sheets however,
+# each selector can only be declared once.
+#
+# You can create a new keybinding in this file by typing "key" and then hitting
+# tab.
+#
+# Here's an example taken from Atom's built-in keymap:
+#
+# 'atom-text-editor':
+#   'enter': 'editor:newline'
+#
+# 'atom-workspace':
+#   'ctrl-shift-p': 'core:move-up'
+#   'ctrl-p': 'core:move-down'
+#
+# You can find more information about keymaps in these guides:
+# * http://flight-manual.atom.io/using-atom/sections/basic-customization/#_customizing_keybindings
+# * http://flight-manual.atom.io/behind-atom/sections/keymaps-in-depth/
+#
+# If you're having trouble with your keybindings not working, try the
+# Keybinding Resolver: `Cmd+.` on macOS and `Ctrl+.` on other platforms. See the
+# Debugging Guide for more information:
+# * http://flight-manual.atom.io/hacking-atom/sections/debugging/#check-the-keybindings
+#
+# This file uses CoffeeScript Object Notation (CSON).
+# If you are unfamiliar with CSON, you can read more about it in the
+# Atom Flight Manual:
+# http://flight-manual.atom.io/using-atom/sections/basic-customization/#_cson
+'atom-text-editor':
+  'ctrl-i': 'editor:auto-indent'
+  'ctrl-k t down': 'unset!'
+  'ctrl-k t left': 'unset!'
+  'ctrl-k ctrl-0': 'unset!'
+  'ctrl-k ctrl-1': 'unset!'
+  'ctrl-k ctrl-2': 'unset!'
+  'ctrl-k ctrl-3': 'unset!'
+  'ctrl-k ctrl-4': 'unset!'
+  'ctrl-k ctrl-5': 'unset!'
+  'ctrl-k ctrl-6': 'unset!'
+  'ctrl-k ctrl-7': 'unset!'
+  'ctrl-k ctrl-8': 'unset!'
+  'ctrl-k ctrl-9': 'unset!'
+  'ctrl-k ctrl-alt-w': 'unset!'
+  'ctrl-k ctrl-b': 'unset!'
+  'ctrl-k ctrl-d': 'unset!'
+  'ctrl-k ctrl-down': 'unset!'
+  'ctrl-k ctrl-k': 'unset!'
+  'ctrl-k ctrl-l': 'unset!'
+  'ctrl-k ctrl-left': 'unset!'
+  'ctrl-k ctrl-n': 'unset!'
+  'ctrl-k ctrl-p': 'unset!'
+  'ctrl-k ctrl-right': 'unset!'
+  'ctrl-k ctrl-u': 'unset!'
+  'ctrl-k ctrl-up': 'unset!'
+  'ctrl-k ctrl-w': 'unset!'
+  'ctrl-k down': 'unset!'
+  'ctrl-k h': 'unset!'
+  'ctrl-k k': 'unset!'
+  'ctrl-k l': 'unset!'
+  'ctrl-k left': 'unset!'
+  'ctrl-k right': 'unset!'
+  'ctrl-k j': 'unset!'
+  'ctrl-k up': 'unset!'
