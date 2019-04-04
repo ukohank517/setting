@@ -1,4 +1,7 @@
 # Your keymap
+######################################################################
+#  base: atomic-emacs                                                #
+######################################################################
 #
 # Atom keymaps work similarly to style sheets. Just as style sheets use
 # selectors to apply styles to elements, Atom keymaps use selectors to associate
