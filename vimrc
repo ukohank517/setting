@@ -1,4 +1,14 @@
-" during insert mode, use emacs keybind
+"#####表示設定#####
+set number "行番号を表示する
+set title "編集中のファイル名を表示
+set showmatch "括弧入力時の対応する括弧を表示
+syntax on "コードの色分け
+set tabstop=4 "インデントをスペース4つ分に設定
+set smartindent "オートインデント
+
+
+
+" #####during insert mode, use emacs keybind#####
 imap <C-p> <Up>
 imap <C-n> <Down>
 imap <C-b> <Left>
