@@ -3,6 +3,18 @@ alias dcstop="docker stop `docker ps \-a -q` "
 #alias dcr="docker rm \'docker ps -a -q\'"                                                                             
 #alias dcrmall="docker rm `docker ps -a -q`"                                                                           
 
+# history上限追加
+HISTSIZE=100000
+
+# コマンド履歴操作
+bind '"\C-n": history-search-forward'
+bind '"\C-p": history-search-backward'
+# 上矢印キー                                                                                                           
+bind '"\e[A": history-search-backward'
+# 下矢印キー                                                                                                           
+bind '"\e[B": history-search-forward'
+
+
 # bash自動補完                                                                                                         
 # bash-completionが必要                                                                                                
 if [ -f $(brew --prefix)/etc/bash_completion ]; then
