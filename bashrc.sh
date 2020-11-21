@@ -32,7 +32,8 @@ bind '"\e[B": history-search-forward' # down-arrow-key
 alias rm="trash"
 
 # bash-completion, auto fill in the blank
-source /Library/Developer/CommandLineTools/usr/share/git-core/git-prompt.sh
+source /Library/Developer/CommandLineTools/usr/share/git-core/git-prompt.sh # bash profile prompt
+bash /Library/Developer/CommandLineTools/usr/share/git-core/git-completion.bash # auto completion for git
 
 ######################################################
 #################### user setting ####################
