@@ -2,13 +2,13 @@
 
 普段使ってるアプリと、その中の設定を書き出しています。
 
-# [chrome](https://www.google.co.jp/chrome/)
+## [chrome](https://www.google.co.jp/chrome/)
 
 ブラウザー
 
 設定→規定のブラウザよりデフォルト設定変更　
 
-# App Store
+## App Store
 
 必ず入れるアプリ：
 
@@ -16,13 +16,13 @@
 
 - [tab notes](https://apps.apple.com/jp/app/tab-notes-lite/id410479438)
 
-# [Visual Studio Code](https://code.visualstudio.com/)
+## [Visual Studio Code](https://code.visualstudio.com/)
 
 カスタマイズするエディター、setting syncオンする
 
-# shell
+## shell
 
-## [homebrew](https://brew.sh/)
+### [homebrew](https://brew.sh/)
 
 パッケージ管理ツール、入れ終わると、下記のパッケージを入れる。
 
@@ -37,26 +37,30 @@ brew install bash-completion
 # ln -s /Library/Developer/CommandLineTools/usr/share/git-core/git-completion.bash /usr/local/etc/bash_completion.d/git-completion.bash
 ```
 
-## bash_profile
+### bash_profile
 
 [bash_profile](https://github.com/ukohank517/setting/blob/master/bash_profile.sh)
 
-## bashrc
+### bashrc
 
 [bashrc](https://github.com/ukohank517/setting/blob/master/bashrc.sh)
 
-# [postman](https://www.postman.com/download)
+## [docker for mac](https://hub.docker.com/editions/community/docker-ce-desktop-mac)
+
+[Get Docker](https://hub.docker.com/editions/community/docker-ce-desktop-mac)より、ダウンロードしてインストールする。
+
+## [postman](https://www.postman.com/download)
 
 一応ウェブプログラマーなので、API叩けるツールが必要
 
-# [shiftIt](https://github.com/fikovnik/ShiftIt/releases)
+## [shiftIt](https://github.com/fikovnik/ShiftIt/releases)
 
 画面分割アプリ
 
-# [clipy](https://clipy-app.com/)
+## [clipy](https://clipy-app.com/)
 
 拡張クリップボード、複数コピー情報を所有できる。
 
-# [gasmask](https://github.com/2ndalpha/gasmask/releases)
+## [gasmask](https://github.com/2ndalpha/gasmask/releases)
 
 hostファイル編集ツール
