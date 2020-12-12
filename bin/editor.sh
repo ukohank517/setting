@@ -1,4 +1,5 @@
 #!/bin/bash
+
 EMACS_PATH=~/.emacs.d/init.el
 EMACS_SET_FILE=./src/emacs.d_init.el
 
@@ -16,7 +17,7 @@ if hash emacs 2>/dev/null; then
         cp $EMACS_SET_FILE $EMACS_PATH
     fi
 else
-    message="<error> command 'emacs' not exist, you can use brew to install it \n         or install like here(centos): 'url'"
+    message="<error> command 'emacs' not exist, you can use brew to install it \n         or install like here(centos): 'urlhttps://github.com/ukohank517/setting/blob/master/tmp/install_emacs.sh'"
     echo -e $'\e[31m' "${message}"
 fi
 
