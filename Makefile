@@ -4,5 +4,5 @@ all:
 editor:
 	bash ./bin/editor.sh
 
-mac_check:
+mac:
 	bash ./bin/mac_check.sh
