@@ -87,7 +87,7 @@ function checkAapp() {
     fi
 }
 
-function test() {
+function openDlLink() {
     printTitle "Result"
     if [ ${#DL_LINKS[@]} -eq 0 ]; then
         # https://lazesoftware.com/tool/hugeaagen/
@@ -134,4 +134,4 @@ else
 fi
 
 checkAapp
-test
+openDlLink

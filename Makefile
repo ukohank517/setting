@@ -6,3 +6,6 @@ editor:
 
 mac:
 	bash ./bin/mac_check.sh
+
+shell:
+	bash ./bin/shell_setting.sh
