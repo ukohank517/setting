@@ -77,6 +77,11 @@ function checkAapp() {
         DL_LINKS+=("https://github.com/2ndalpha/gasmask/releases")
     fi
 
+    # runcat
+    if ! existInApplication RunCat.app; then
+        DL_LINKS+=("https://apps.apple.com/jp/app/runcat/id1429033973")
+    fi
+
     printTitle "Command Check"
 
     # brew
