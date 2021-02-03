@@ -18,7 +18,10 @@ if [ -e $BASHRC_PATH ] || [ -e $BASHPROFILE_PATH ]; then
     message="[error] shell setting file already exist, skipped, check filepath:[$BASHRC_PATH][$BASHPROFILE_PATH]"
     echo $'\e[31m' ${message} $'\e[0m'
 else
-    echo "nothing"
-    cp $BASHPROFILE_PATH $BASHPROFILE_PATH
+    echo "start..."
+    cp $BASHPROFILE_SET_FILE $BASHPROFILE_PATH
+    echo "bash_profile down"
     cp $BASHRC_SET_FILE $BASHRC_PATH
+    echo "bashrc down"
+    echo "end"
 fi
