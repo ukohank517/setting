@@ -37,16 +37,6 @@ function existInApplication() {
 function checkAapp() {
     printTitle "Application Check"
 
-    # xcode
-    if ! existInApplication Xcode.app ; then
-        DL_LINKS+=("https://apps.apple.com/jp/app/xcode/id497799835")
-    fi
-
-    # tab memo light
-    if ! existInApplication Tab\ Notes\ Free.app ; then
-        DL_LINKS+=("https://apps.apple.com/jp/app/tab-notes-lite/id410479438")
-    fi
-
     # vscode
     if ! existInApplication Visual\ Studio\ Code.app; then
         DL_LINKS+=("https://code.visualstudio.com")
@@ -60,6 +50,11 @@ function checkAapp() {
     # postman
     if ! existInApplication Postman.app; then
         DL_LINKS+=("https://www.postman.com/downloads")
+    fi
+
+    # Hammerspoon
+    if ! existInApplication Hammerspoon.app; then
+        DL_LINKS+=("https://www.hammerspoon.org/")
     fi
 
     # ShiftIt

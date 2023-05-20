@@ -8,14 +8,6 @@
 
 設定→規定のブラウザよりデフォルト設定変更　
 
-## App Store
-
-必ず入れるアプリ：
-
-- [xcode](https://apps.apple.com/jp/app/xcode/id497799835)
-
-- [tab notes](https://apps.apple.com/jp/app/tab-notes-lite/id410479438)
-
 ## [Visual Studio Code](https://code.visualstudio.com/)
 
 カスタマイズするエディター、setting syncオンする
@@ -53,9 +45,12 @@ brew install bash-completion
 
 一応ウェブプログラマーなので、API叩けるツールが必要
 
-## [shiftIt](https://github.com/fikovnik/ShiftIt/releases)
+## [hammerspoon](https://www.hammerspoon.org/)
 
-画面分割アプリ
+- https://github.com/fikovnik/ShiftIt/releases
+- https://github.com/peterklijn/hammerspoon-shiftit/tree/master/Spoons
+- https://github.com/ukohank517/setting/blob/master/bin/init.lua
+
 
 ## [clipy](https://clipy-app.com/)
 
