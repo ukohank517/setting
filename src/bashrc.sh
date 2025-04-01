@@ -5,7 +5,7 @@
 # bash prompt sytle
 # PS1="\u:\t \W $" # username:time direcotry-name
 GIT_PS1_SHOWDIRTYSTATE=true
-export PS1='\n\[\033[32m\]\u@\h\[\033[00m\]:\[\033[33m\]\w\[\033[31m\]$(__git_ps1)\[\033[00m\]\n\$ '
+export PS1='\n\[\033[32m\]\u@\h\[\033[00m\]:\[\033[33m\]\w\[\033[31m\]$(__git_ps1)\[\033[00m\] \[\033[36m\]$(date +\%H:\%M:\%S)\[\033[00m\]\n\$ '
 
 # bash system language
 export LC_ALL=en_US.UTF-8
