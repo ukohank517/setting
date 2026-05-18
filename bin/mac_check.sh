@@ -57,11 +57,6 @@ function checkAapp() {
         DL_LINKS+=("https://www.hammerspoon.org/")
     fi
 
-    # ShiftIt
-    if ! existInApplication ShiftIt.app; then
-        DL_LINKS+=("https://github.com/fikovnik/ShiftIt/releases")
-    fi
-
     # Clipy
     if ! existInApplication Clipy.app; then
         DL_LINKS+=("https://clipy-app.com/")
