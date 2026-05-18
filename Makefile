@@ -7,5 +7,8 @@ editor:
 mac:
 	bash ./bin/mac_check.sh
 
+hammer:
+	bash ./bin/hammer.sh
+
 shell:
 	bash ./bin/shell_setting.sh
