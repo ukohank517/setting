@@ -41,3 +41,5 @@ source /Library/Developer/CommandLineTools/usr/share/git-core/git-completion.bas
 
 alias memo="echo '[TODO]: set memo file path'" #b coder
 #flumake for emacs : https://qiita.com/awakia/items/5c97b02dcc3c7fd20279
+
+source ~/.git-branches

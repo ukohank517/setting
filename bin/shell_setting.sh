@@ -8,6 +8,8 @@ fi
 `brew install emacs mysql trash wget bash-completion`
 
 
+GIT_BRANCHES_PATH=~/.git-branches
+GIT_BRANCHES_SET_FILE=./src/git-branches.sh
 BASHRC_PATH=~/.bashrc
 BASHPROFILE_PATH=~/.bash_profile
 BASHRC_SET_FILE=./src/bashrc.sh
@@ -19,6 +21,8 @@ if [ -e $BASHRC_PATH ] || [ -e $BASHPROFILE_PATH ]; then
     echo $'\e[31m' ${message} $'\e[0m'
 else
     echo "start..."
+    cp $GIT_BRANCHES_SET_FILE $GIT_BRANCHES_PATH
+    echo "git-branches down"
     cp $BASHPROFILE_SET_FILE $BASHPROFILE_PATH
     echo "bash_profile down"
     cp $BASHRC_SET_FILE $BASHRC_PATH
