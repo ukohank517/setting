@@ -12,6 +12,3 @@ hammer:
 
 shell:
 	bash ./bin/shell_setting.sh
-
-iterm:
-	bash ./bin/iterm.sh

@@ -57,11 +57,6 @@ function checkAapp() {
         DL_LINKS+=("https://www.hammerspoon.org/")
     fi
 
-    # iTerm2
-    if ! existInApplication iTerm.app; then
-        DL_LINKS+=("https://iterm2.com/")
-    fi
-
     # Clipy
     if ! existInApplication Clipy.app; then
         DL_LINKS+=("https://clipy-app.com/")
