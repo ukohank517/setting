@@ -52,6 +52,29 @@ brew install bash-completion
 - https://github.com/ukohank517/setting/blob/master/bin/init.lua
 
 
+## [iTerm2](https://iterm2.com/)
+
+ターミナル。設定は `src/iterm2/com.googlecode.iterm2.plist` に書き出して管理している。
+
+適用（iTerm2 を終了してから実行）:
+
+```bash
+make iterm
+```
+
+主なカスタマイズ:
+
+- 新規タブ/分割を前セッションと同じフォルダで開く（Profiles → General → Working Directory → Reuse previous session's directory）
+- 分割ペインごとにタイトルバー表示（Appearance → Panes → Show per-pane title bar）
+- タイトルに現在フォルダ・実行コマンドを表示（Profiles → General → Title → Current Directory / Job Name）
+- 上記は [Shell Integration](https://iterm2.com/documentation-shell-integration.html) が前提
+
+GUI で設定を変えたら、下記で repo 側に反映する:
+
+```bash
+defaults export com.googlecode.iterm2 ./src/iterm2/com.googlecode.iterm2.plist
+```
+
 ## [clipy](https://clipy-app.com/)
 
 拡張クリップボード、複数コピー情報を所有できる。
