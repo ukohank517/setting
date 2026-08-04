@@ -159,45 +159,45 @@ function setupMacDefaults() {
     printTitle "macOS Defaults Check"
     DEFAULTS_CHANGED=0
 
-    # key repeat: disable press-and-hold, make repeat fast
-    setMacDefault -g ApplePressAndHoldEnabled -bool false 0
-    setMacDefault -g InitialKeyRepeat        -int  15    15  # normal minimum is 15 (225 ms)
-    setMacDefault -g KeyRepeat               -int  1     1   # normal minimum is 2 (30 ms)
+    ### キーリピート
+    setMacDefault -g ApplePressAndHoldEnabled -bool false 0   # キー長押しでアクセント文字メニューを出さず、リピート入力する
+    setMacDefault -g InitialKeyRepeat        -int  15    15   # リピート開始までの待ち時間 (15 = 225ms, GUIの最小値)
+    setMacDefault -g KeyRepeat               -int  1     1    # リピート間隔 (1 = 15ms, GUIの最小値2より速い)
 
-    # trackpad: tap to click (builtin / bluetooth / per-host)
-    setMacDefault com.apple.AppleMultitouchTrackpad Clicking -bool true 1
-    setMacDefault com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true 1
-    setMacDefaultHost -g com.apple.mouse.tapBehavior -int 1 1
+    ### トラックパッド: タップでクリック
+    setMacDefault com.apple.AppleMultitouchTrackpad Clicking -bool true 1                  # 内蔵トラックパッド
+    setMacDefault com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true 1 # 外付け(Bluetooth)トラックパッド
+    setMacDefaultHost -g com.apple.mouse.tapBehavior -int 1 1                              # ログイン画面などにも効くホスト単位の設定
 
-    # trackpad: three finger drag
-    setMacDefault com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true 1
-    setMacDefault com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true 1
+    ### トラックパッド: 3本指ドラッグ
+    setMacDefault com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true 1                  # 内蔵トラックパッド
+    setMacDefault com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true 1 # 外付け(Bluetooth)トラックパッド
 
-    # typing: stop auto-"correcting" code and commands
-    setMacDefault -g NSAutomaticSpellingCorrectionEnabled -bool false 0
-    setMacDefault -g NSAutomaticCapitalizationEnabled     -bool false 0
-    setMacDefault -g NSAutomaticPeriodSubstitutionEnabled -bool false 0  # no "." on double space
-    setMacDefault -g NSAutomaticQuoteSubstitutionEnabled  -bool false 0  # keep straight quotes
-    setMacDefault -g NSAutomaticDashSubstitutionEnabled   -bool false 0  # keep --
+    ### 入力: コードやコマンドを勝手に「修正」させない
+    setMacDefault -g NSAutomaticSpellingCorrectionEnabled -bool false 0  # スペル自動修正をオフ
+    setMacDefault -g NSAutomaticCapitalizationEnabled     -bool false 0  # 文頭の自動大文字化をオフ
+    setMacDefault -g NSAutomaticPeriodSubstitutionEnabled -bool false 0  # スペース2回で「.」を入れる機能をオフ
+    setMacDefault -g NSAutomaticQuoteSubstitutionEnabled  -bool false 0  # " を “ ” に変換しない (コード貼り付け事故防止)
+    setMacDefault -g NSAutomaticDashSubstitutionEnabled   -bool false 0  # -- を — に変換しない
 
-    # finder
-    setMacDefault -g AppleShowAllExtensions -bool true 1
-    setMacDefault com.apple.finder AppleShowAllFiles -bool true 1
-    setMacDefault com.apple.finder ShowPathbar       -bool true 1
-    setMacDefault com.apple.desktopservices DSDontWriteNetworkStores -bool true 1 # no .DS_Store on network drives
+    ### Finder
+    setMacDefault -g AppleShowAllExtensions -bool true 1                              # 全ファイルの拡張子を常に表示
+    setMacDefault com.apple.finder AppleShowAllFiles -bool true 1                     # 隠しファイル(dotfile)を表示 (cmd+shift+. でトグル可)
+    setMacDefault com.apple.finder ShowPathbar       -bool true 1                     # ウィンドウ下部にパスバーを表示
+    setMacDefault com.apple.desktopservices DSDontWriteNetworkStores -bool true 1     # ネットワークドライブに .DS_Store を作らない
 
-    # screenshot
+    ### スクリーンショット
     mkdir -p "$HOME/Desktop/screenshot"
-    setMacDefault com.apple.screencapture location -string "~/Desktop/screenshot" "~/Desktop/screenshot"
-    setMacDefault com.apple.screencapture disable-shadow -bool true 1
+    setMacDefault com.apple.screencapture location -string "~/Desktop/screenshot" "~/Desktop/screenshot" # 保存先 (デスクトップ散らかり防止)
+    setMacDefault com.apple.screencapture disable-shadow -bool true 1                                    # ウィンドウ撮影時の影を付けない
 
-    # dock
-    setMacDefault com.apple.dock autohide -bool true 1
-    setMacDefault com.apple.dock autohide-delay         -float 0   0    # show instantly
-    setMacDefault com.apple.dock autohide-time-modifier -float 0.5 0.5  # faster animation
+    ### Dock
+    setMacDefault com.apple.dock autohide -bool true 1                   # 自動的に隠す
+    setMacDefault com.apple.dock autohide-delay         -float 0   0     # マウスを寄せたら即表示 (デフォルトは0.5秒待つ)
+    setMacDefault com.apple.dock autohide-time-modifier -float 0.5 0.5   # 出入りのアニメーションを2倍速に
 
-    # ghostty: always-on secure keyboard entry (block keystroke snooping)
-    setMacDefault com.mitchellh.ghostty SecureInput -bool true 1
+    ### Ghostty
+    setMacDefault com.mitchellh.ghostty SecureInput -bool true 1  # Secure Keyboard Entry 常時オン (他アプリのキー入力盗み見を防ぐ)
 
     if [ "$DEFAULTS_CHANGED" -eq 1 ]; then
         printInfo "restarting Dock/Finder/SystemUIServer to apply..."
