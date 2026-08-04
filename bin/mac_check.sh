@@ -114,6 +114,32 @@ function checkAapp() {
     checkBrewCmd "herdr" "herdr" "https://herdr.dev/"
 }
 
+# $1: key, $2: type option, $3: value to write, $4: expected value from `defaults read`
+function setMacDefault() {
+    CURRENT=$(defaults read -g "$1" 2>/dev/null)
+    if [ "$CURRENT" = "$4" ]; then
+        printInfo "already set: $1 = $CURRENT"
+    else
+        printInfo "set: $1 -> $3 (was: ${CURRENT:-<not set>})"
+        defaults write -g "$1" "$2" "$3"
+        DEFAULTS_CHANGED=1
+    fi
+}
+
+function setupMacDefaults() {
+    printTitle "macOS Defaults Check"
+    DEFAULTS_CHANGED=0
+
+    # key repeat: disable press-and-hold, make repeat fast
+    setMacDefault ApplePressAndHoldEnabled -bool false 0
+    setMacDefault InitialKeyRepeat        -int  15    15  # normal minimum is 15 (225 ms)
+    setMacDefault KeyRepeat               -int  1     1   # normal minimum is 2 (30 ms)
+
+    if [ "$DEFAULTS_CHANGED" -eq 1 ]; then
+        printInfo "note: re-login (or restart apps) to apply changed defaults."
+    fi
+}
+
 function installBrewPackages() {
     if [ $(( ${#BREW_CASKS[@]} + ${#BREW_FORMULAE[@]} )) -eq 0 ]; then
         return 0
@@ -188,4 +214,5 @@ printInfo "auto-install via brew when possible."
 setupBrew
 checkAapp
 installBrewPackages
+setupMacDefaults
 openDlLink

@@ -4,8 +4,9 @@ all:
 mac:
 	bash ./bin/mac_check.sh
 
+shell:
+	bash ./bin/shell_setting.sh
+
 dotfile:
 	bash ./bin/dotfile.sh
 
-shell:
-	bash ./bin/shell_setting.sh
