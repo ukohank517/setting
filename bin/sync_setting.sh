@@ -7,11 +7,12 @@
 # usage: source ./bin/sync_setting.sh
 
 # arrow-key menu (up/down or j/k, enter to decide).
+# cursor starts on the LAST option, so plain enter picks the safe one (skip).
 # $@: options, selected index (0-based) -> SELECT_RESULT
 function selectMenu() {
     local options=("$@")
     local count=$#
-    local idx=0
+    local idx=$((count - 1))
     local i key key2
 
     # not a terminal (e.g. piped): fall back to number input
@@ -84,7 +85,8 @@ function syncSettingFile() {
                    { print }
         '
     echo "--------------------------------------------------"
-    echo "how to sync?"
+    # repeat the target here: with a long diff, the header has scrolled away
+    echo "how to sync? -> ${NAME} (${LOCAL_FILE})"
     selectMenu \
         "local -> git   (copy local file into this repo)" \
         "git -> local   (overwrite local file)" \
