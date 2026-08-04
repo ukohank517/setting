@@ -35,6 +35,12 @@ alias rm="trash"
 source /Library/Developer/CommandLineTools/usr/share/git-core/git-prompt.sh # bash profile prompt
 source /Library/Developer/CommandLineTools/usr/share/git-core/git-completion.bash # auto completion for git
 
+# ghostty shell integration: window title = cwd, new tab inherits cwd.
+# GHOSTTY_RESOURCES_DIR is only set inside ghostty, so this is a no-op elsewhere.
+if [ -n "${GHOSTTY_RESOURCES_DIR}" ]; then
+    builtin source "${GHOSTTY_RESOURCES_DIR}/shell-integration/bash/ghostty.bash"
+fi
+
 ######################################################
 #################### user setting ####################
 ######################################################
