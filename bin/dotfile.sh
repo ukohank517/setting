@@ -14,6 +14,10 @@ syncSettingFile "git-branches" ./src/git-branches.sh ~/.git-branches
 syncSettingFile "bash_profile" ./src/bash_profile.sh ~/.bash_profile
 syncSettingFile "bashrc"       ./src/bashrc.sh       ~/.bashrc
 
+# terminal
+syncSettingFile "ghostty" ./src/ghostty_config     ~/.config/ghostty/config
+syncSettingFile "herdr"   ./src/herdr_config.toml  ~/.config/herdr/config.toml
+
 # hammerspoon (sync every file in the repo folder, keeping relative paths)
 if [ -d "/Applications/Hammerspoon.app" ]; then
     HAMMERSPOON_SET_FOLDER=./src/hammerspoon

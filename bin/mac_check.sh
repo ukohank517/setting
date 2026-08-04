@@ -82,6 +82,17 @@ function checkCaskApp() {
     fi
 }
 
+# $1: brew cask name (font etc, not an app in /Applications), $2: manual page
+function checkBrewCask() {
+    if brew list --cask "$1" >/dev/null 2>&1; then
+        printInfo "you can use cask: $1"
+    else
+        printError "you cannot use cask: $1"
+        BREW_CASKS+=("$1")
+        CASK_FALLBACKS+=("$2")
+    fi
+}
+
 # $1: command name, $2: brew formula name, $3: manual page
 function checkBrewCmd() {
     if hash "$1" 2>/dev/null; then
@@ -108,6 +119,11 @@ function checkAapp() {
     if ! existInApplication RunCat.app; then
         DL_LINKS+=("https://apps.apple.com/jp/app/runcat/id1429033973")
     fi
+
+    printTitle "Font Check"
+
+    # terminal font used by ghostty config (src/ghostty_config)
+    checkBrewCask "font-hackgen-nerd" "https://github.com/yuru7/HackGen/releases"
 
     printTitle "Command Check"
 
