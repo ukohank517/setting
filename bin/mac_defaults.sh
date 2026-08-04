@@ -97,7 +97,21 @@ function setupMacDefaults() {
     if [ "$DEFAULTS_CHANGED" -eq 1 ]; then
         printInfo "restarting Dock/Finder/SystemUIServer to apply..."
         killall Dock Finder SystemUIServer 2>/dev/null
-        printInfo "note: keyboard/trackpad changes need re-login to apply."
+        printInfo "note: keyboard/trackpad changes need re-login (or restart) to apply."
+
+        # 再起動するか確認する。デフォルトは「しない」(そのままEnter = n)。
+        # パイプ実行など非対話のときは聞かずに何もしない。
+        if [ -t 0 ]; then
+            read -p "  restart mac now to apply them? [y/N]: " YN
+            if [ "$YN" = "y" ] || [ "$YN" = "Y" ]; then
+                printInfo "restarting in 5 seconds... (press ctrl+c to cancel)"
+                sleep 5
+                # System Events 経由の再起動: 未保存のアプリがあればOS側でもキャンセルできる
+                osascript -e 'tell application "System Events" to restart'
+            else
+                printInfo "skipped restart. changes will apply after next re-login."
+            fi
+        fi
     fi
 }
 
