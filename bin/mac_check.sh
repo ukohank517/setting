@@ -173,11 +173,36 @@ function setupMacDefaults() {
     setMacDefault com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true 1
     setMacDefault com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true 1
 
+    # typing: stop auto-"correcting" code and commands
+    setMacDefault -g NSAutomaticSpellingCorrectionEnabled -bool false 0
+    setMacDefault -g NSAutomaticCapitalizationEnabled     -bool false 0
+    setMacDefault -g NSAutomaticPeriodSubstitutionEnabled -bool false 0  # no "." on double space
+    setMacDefault -g NSAutomaticQuoteSubstitutionEnabled  -bool false 0  # keep straight quotes
+    setMacDefault -g NSAutomaticDashSubstitutionEnabled   -bool false 0  # keep --
+
+    # finder
+    setMacDefault -g AppleShowAllExtensions -bool true 1
+    setMacDefault com.apple.finder AppleShowAllFiles -bool true 1
+    setMacDefault com.apple.finder ShowPathbar       -bool true 1
+    setMacDefault com.apple.desktopservices DSDontWriteNetworkStores -bool true 1 # no .DS_Store on network drives
+
+    # screenshot
+    mkdir -p "$HOME/Desktop/screenshot"
+    setMacDefault com.apple.screencapture location -string "~/Desktop/screenshot" "~/Desktop/screenshot"
+    setMacDefault com.apple.screencapture disable-shadow -bool true 1
+
+    # dock
+    setMacDefault com.apple.dock autohide -bool true 1
+    setMacDefault com.apple.dock autohide-delay         -float 0   0    # show instantly
+    setMacDefault com.apple.dock autohide-time-modifier -float 0.5 0.5  # faster animation
+
     # ghostty: always-on secure keyboard entry (block keystroke snooping)
     setMacDefault com.mitchellh.ghostty SecureInput -bool true 1
 
     if [ "$DEFAULTS_CHANGED" -eq 1 ]; then
-        printInfo "note: re-login (or restart apps) to apply changed defaults."
+        printInfo "restarting Dock/Finder/SystemUIServer to apply..."
+        killall Dock Finder SystemUIServer 2>/dev/null
+        printInfo "note: keyboard/trackpad changes need re-login to apply."
     fi
 }
 
