@@ -130,14 +130,15 @@ function checkAapp() {
     checkBrewCmd "herdr" "herdr" "https://herdr.dev/"
 }
 
-# $1: key, $2: type option, $3: value to write, $4: expected value from `defaults read`
+# $1: domain (-g for global), $2: key, $3: type option, $4: value to write,
+# $5: expected value from `defaults read`
 function setMacDefault() {
-    CURRENT=$(defaults read -g "$1" 2>/dev/null)
-    if [ "$CURRENT" = "$4" ]; then
-        printInfo "already set: $1 = $CURRENT"
+    CURRENT=$(defaults read "$1" "$2" 2>/dev/null)
+    if [ "$CURRENT" = "$5" ]; then
+        printInfo "already set: $2 = $CURRENT"
     else
-        printInfo "set: $1 -> $3 (was: ${CURRENT:-<not set>})"
-        defaults write -g "$1" "$2" "$3"
+        printInfo "set: $2 -> $4 (was: ${CURRENT:-<not set>})"
+        defaults write "$1" "$2" "$3" "$4"
         DEFAULTS_CHANGED=1
     fi
 }
@@ -147,9 +148,12 @@ function setupMacDefaults() {
     DEFAULTS_CHANGED=0
 
     # key repeat: disable press-and-hold, make repeat fast
-    setMacDefault ApplePressAndHoldEnabled -bool false 0
-    setMacDefault InitialKeyRepeat        -int  15    15  # normal minimum is 15 (225 ms)
-    setMacDefault KeyRepeat               -int  1     1   # normal minimum is 2 (30 ms)
+    setMacDefault -g ApplePressAndHoldEnabled -bool false 0
+    setMacDefault -g InitialKeyRepeat        -int  15    15  # normal minimum is 15 (225 ms)
+    setMacDefault -g KeyRepeat               -int  1     1   # normal minimum is 2 (30 ms)
+
+    # ghostty: always-on secure keyboard entry (block keystroke snooping)
+    setMacDefault com.mitchellh.ghostty SecureInput -bool true 1
 
     if [ "$DEFAULTS_CHANGED" -eq 1 ]; then
         printInfo "note: re-login (or restart apps) to apply changed defaults."
