@@ -1,61 +1,73 @@
 # macの初期設定
 
-普段使ってるアプリと、その中の設定を書き出しています。
+普段使ってるアプリと設定のメモ。セットアップは基本 `make` で完結する。
 
-## [chrome](https://www.google.co.jp/chrome/)
-
-ブラウザー
-
-設定→規定のブラウザよりデフォルト設定変更　
-
-## [Visual Studio Code](https://code.visualstudio.com/)
-
-カスタマイズするエディター、setting syncオンする
-
-## shell
-
-### [homebrew](https://brew.sh/)
-
-パッケージ管理ツール、入れ終わると、下記のパッケージを入れる。
+## セットアップ手順
 
 ```bash
-brew install emacs
-brew install trash
-brew install bash-completion
-# download git-prompt.sh
-# wget -P /usr/local/etc/bash_completion.d/ https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh
-# download git-completion.sh
-# wget -P /usr/local/etc/bash_completion.d/ https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh
-# ln -s /Library/Developer/CommandLineTools/usr/share/git-core/git-completion.bash /usr/local/etc/bash_completion.d/git-completion.bash
+make mac      # brew・アプリ・フォント・herdr を自動インストール、macOS defaults 設定
+make shell    # brew でシェル関連パッケージ (emacs, mysql, trash, wget, bash-completion)
+make dotfile  # 設定ファイルを git <-> local で対話同期
 ```
 
-### bash_profile
+## make mac が入れるもの
 
-[bash_profile](https://github.com/ukohank517/setting/blob/master/bash_profile.sh)
+自動インストール (brew cask / formula)。無いものだけ入る。
 
-### bashrc
+| 種類 | 対象 |
+|---|---|
+| アプリ | Chrome, VS Code, Docker, Postman, Hammerspoon, Clipy, Ghostty, AltTab |
+| フォント | HackGen Console NF (ghostty で使用) |
+| CLI | herdr |
+| defaults | キーリピート高速化 (ApplePressAndHoldEnabled / InitialKeyRepeat / KeyRepeat) |
 
-[bashrc](https://github.com/ukohank517/setting/blob/master/bashrc.sh)
+- [RunCat](https://apps.apple.com/jp/app/runcat/id1429033973) だけは Mac App Store 専売なので、DLページが開く (手動インストール)
+- brew 自体も無ければ自動で入る
 
-## [docker for mac](https://hub.docker.com/editions/community/docker-ce-desktop-mac)
+## make dotfile が同期するもの
 
-[Get Docker](https://hub.docker.com/editions/community/docker-ce-desktop-mac)より、ダウンロードしてインストールする。
+`bin/dotfile.sh` に一覧がある。新しい設定ファイルを管理したくなったら1行足す。
 
-## [postman](https://www.postman.com/download)
+| 名前 | local |
+|---|---|
+| emacs | `~/.emacs.d/init.el` |
+| vim | `~/.vimrc` |
+| git-branches | `~/.git-branches` |
+| bash_profile | `~/.bash_profile` |
+| bashrc | `~/.bashrc` |
+| ghostty | `~/.config/ghostty/config` |
+| herdr | `~/.config/herdr/config.toml` |
+| hammerspoon | `~/.hammerspoon/` 以下 |
 
-一応ウェブプログラマーなので、API叩けるツールが必要
+差分があると diff を表示して local -> git / git -> local / vimdiff手動マージ / skip を選べる。
+git -> local は上書き前に `.bak` を残す。local -> git はコピーだけなのでコミットは手動。
 
-## [hammerspoon](https://www.hammerspoon.org/)
+## ターミナル構成
 
-- https://github.com/fikovnik/ShiftIt/releases
-- https://github.com/peterklijn/hammerspoon-shiftit/tree/master/Spoons
-- https://github.com/ukohank517/setting/blob/master/bin/init.lua
+- **Ghostty** … 入れ物 (描画・フォント・テーマ)。TokyoNight + HackGen Console NF。
+  分割やタブ管理はしない。`cmd+d` は herdr の分割キーに転送している。
+- **herdr** … ターミナル多重化 + AIエージェント管理。プレフィックスは `ctrl+b`。
+  分割・タブ・ワークスペース・セッション永続化はすべてこちら。
+  ペイン境界に pwd が出る (bashrc の `__herdr_pane_title` フック)。
 
+## アプリ個別メモ
 
-## [clipy](https://clipy-app.com/)
+### [chrome](https://www.google.co.jp/chrome/)
 
-拡張クリップボード、複数コピー情報を所有できる。
+設定→規定のブラウザよりデフォルト設定変更
 
-## [gasmask](https://github.com/2ndalpha/gasmask/releases)
+### [Visual Studio Code](https://code.visualstudio.com/)
 
-hostファイル編集ツール
+setting sync オンする
+
+### [hammerspoon](https://www.hammerspoon.org/)
+
+ウィンドウ操作。設定は `src/hammerspoon/` (ShiftIt spoon + カスタムホットキー)
+
+### [clipy](https://clipy-app.com/)
+
+拡張クリップボード、複数コピー情報を所有できる
+
+### [RunCat](https://apps.apple.com/jp/app/runcat/id1429033973)
+
+メニューバーで猫が走る。App Store から入れる

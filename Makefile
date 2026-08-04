@@ -1,14 +1,15 @@
 all:
 	echo "do some setting"
 
-editor:
-	bash ./bin/editor.sh
-
 mac:
 	bash ./bin/mac_check.sh
 
-hammer:
-	bash ./bin/hammer.sh
+defaults:
+	bash ./bin/mac_defaults.sh
 
 shell:
 	bash ./bin/shell_setting.sh
+
+dotfile:
+	bash ./bin/dotfile.sh
+

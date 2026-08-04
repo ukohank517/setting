@@ -35,6 +35,23 @@ alias rm="trash"
 source /Library/Developer/CommandLineTools/usr/share/git-core/git-prompt.sh # bash profile prompt
 source /Library/Developer/CommandLineTools/usr/share/git-core/git-completion.bash # auto completion for git
 
+# ghostty shell integration: window title = cwd, new tab inherits cwd.
+# GHOSTTY_RESOURCES_DIR is only set inside ghostty, so this is a no-op elsewhere.
+if [ -n "${GHOSTTY_RESOURCES_DIR}" ]; then
+    builtin source "${GHOSTTY_RESOURCES_DIR}/shell-integration/bash/ghostty.bash"
+fi
+
+# herdr: show current directory on this pane's border (like tmux pane-border-format).
+# HERDR_PANE_ID is only set inside herdr panes, so this is a no-op elsewhere.
+if [ -n "${HERDR_PANE_ID}" ]; then
+    function __herdr_pane_title() {
+        [ "$__herdr_last_pwd" = "$PWD" ] && return
+        __herdr_last_pwd=$PWD
+        (herdr pane rename "$HERDR_PANE_ID" "${PWD/#$HOME/~}" >/dev/null 2>&1 &)
+    }
+    PROMPT_COMMAND="__herdr_pane_title${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+fi
+
 ######################################################
 #################### user setting ####################
 ######################################################

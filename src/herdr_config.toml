@@ -1,0 +1,26 @@
+# herdr configuration
+# see all options: `herdr --default-config`
+# reload after edit: `herdr server reload-config`
+
+[theme]
+# match ghostty's TokyoNight.
+# built-in: catppuccin, terminal, tokyo-night, dracula, nord, gruvbox,
+#           one-dark, solarized, kanagawa, rose-pine, vesper
+name = "tokyo-night"
+
+[keys]
+# prefix key, tmux style. all the bindings below need this first.
+prefix = "ctrl+b"
+
+# tab       : prefix+c new / prefix+n next / prefix+p prev / prefix+1..9 jump
+# pane      : prefix+v split-v / prefix+- split-h / prefix+h j k l focus
+# workspace : prefix+w picker / prefix+shift+n new / prefix+shift+g new worktree
+# other     : prefix+z zoom / prefix+e scrollback / prefix+q detach / prefix+? help
+
+[worktrees]
+# where `prefix+shift+g` creates git worktrees
+directory = "~/.herdr/worktrees"
+
+[ui]
+# ask for a tab name when creating a tab. set false to skip the prompt.
+prompt_new_tab_name = true

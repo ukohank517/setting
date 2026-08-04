@@ -1,31 +1,12 @@
+#!/bin/bash
+
+# install shell related packages via brew.
+# setting files (bashrc etc.) are synced by 'make dotfile'.
+
 if ! hash brew 2>/dev/null; then
     echo "Please install brew first."
     exit 1
 fi
 
-# I'm tired....
-`brew upgrade`
-`brew install emacs mysql trash wget bash-completion`
-
-
-GIT_BRANCHES_PATH=~/.git-branches
-GIT_BRANCHES_SET_FILE=./src/git-branches.sh
-BASHRC_PATH=~/.bashrc
-BASHPROFILE_PATH=~/.bash_profile
-BASHRC_SET_FILE=./src/bashrc.sh
-BASHPROFILE_SET_FILE=./src/bash_profile.sh
-
-# set vim setting file
-if [ -e $BASHRC_PATH ] || [ -e $BASHPROFILE_PATH ]; then
-    message="[error] shell setting file already exist, skipped, check filepath:[$BASHRC_PATH][$BASHPROFILE_PATH]"
-    echo $'\e[31m' ${message} $'\e[0m'
-else
-    echo "start..."
-    cp $GIT_BRANCHES_SET_FILE $GIT_BRANCHES_PATH
-    echo "git-branches down"
-    cp $BASHPROFILE_SET_FILE $BASHPROFILE_PATH
-    echo "bash_profile down"
-    cp $BASHRC_SET_FILE $BASHRC_PATH
-    echo "bashrc down"
-    echo "end"
-fi
+brew upgrade
+brew install emacs mysql trash wget bash-completion
