@@ -9,8 +9,9 @@
 name = "tokyo-night"
 
 [keys]
-# prefix key, tmux style. all the bindings below need this first.
-prefix = "ctrl+b"
+# prefix key. cmd+g needs the host terminal to forward cmd keys
+# (ghostty does via the kitty keyboard protocol + super+g unbind).
+prefix = "cmd+g"
 
 # tab       : prefix+c new / prefix+n next / prefix+p prev / prefix+1..9 jump
 # pane      : prefix+v split-v / prefix+- split-h / prefix+h j k l focus

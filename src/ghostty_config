@@ -32,3 +32,6 @@ window-save-state = always
 # treat option as alt, so emacs style M-b / M-f work in bash and emacs.
 # set to false if you need option for special characters.
 macos-option-as-alt = true
+
+# free cmd+g (default: navigate_search:next) so it reaches herdr as its prefix key
+keybind = super+g=unbind
