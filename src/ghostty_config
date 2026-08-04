@@ -32,9 +32,3 @@ window-save-state = always
 # treat option as alt, so emacs style M-b / M-f work in bash and emacs.
 # set to false if you need option for special characters.
 macos-option-as-alt = true
-
-# splits are done by herdr, not ghostty. send herdr's prefix (ctrl+b = \x02)
-# so cmd+d keeps working as "split". NOTE: outside herdr these keys just
-# type the sequence into the shell.
-keybind = super+d=text:\x02v
-keybind = super+shift+d=text:\x02-
