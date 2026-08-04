@@ -143,6 +143,18 @@ function setMacDefault() {
     fi
 }
 
+# same as setMacDefault but for per-host (-currentHost) preferences
+function setMacDefaultHost() {
+    CURRENT=$(defaults -currentHost read "$1" "$2" 2>/dev/null)
+    if [ "$CURRENT" = "$5" ]; then
+        printInfo "already set: $2 = $CURRENT"
+    else
+        printInfo "set: $2 -> $4 (was: ${CURRENT:-<not set>})"
+        defaults -currentHost write "$1" "$2" "$3" "$4"
+        DEFAULTS_CHANGED=1
+    fi
+}
+
 function setupMacDefaults() {
     printTitle "macOS Defaults Check"
     DEFAULTS_CHANGED=0
@@ -151,6 +163,15 @@ function setupMacDefaults() {
     setMacDefault -g ApplePressAndHoldEnabled -bool false 0
     setMacDefault -g InitialKeyRepeat        -int  15    15  # normal minimum is 15 (225 ms)
     setMacDefault -g KeyRepeat               -int  1     1   # normal minimum is 2 (30 ms)
+
+    # trackpad: tap to click (builtin / bluetooth / per-host)
+    setMacDefault com.apple.AppleMultitouchTrackpad Clicking -bool true 1
+    setMacDefault com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true 1
+    setMacDefaultHost -g com.apple.mouse.tapBehavior -int 1 1
+
+    # trackpad: three finger drag
+    setMacDefault com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true 1
+    setMacDefault com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true 1
 
     # ghostty: always-on secure keyboard entry (block keystroke snooping)
     setMacDefault com.mitchellh.ghostty SecureInput -bool true 1
