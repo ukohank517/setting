@@ -16,7 +16,7 @@ make dotfile  # 設定ファイルを git <-> local で対話同期
 
 | 種類 | 対象 |
 |---|---|
-| アプリ | Chrome, VS Code, Docker, Postman, Hammerspoon, Clipy, Ghostty |
+| アプリ | Chrome, VS Code, Docker, Postman, Hammerspoon, Clipy, Ghostty, AltTab |
 | フォント | HackGen Console NF (ghostty で使用) |
 | CLI | herdr |
 | defaults | キーリピート高速化 (ApplePressAndHoldEnabled / InitialKeyRepeat / KeyRepeat) |

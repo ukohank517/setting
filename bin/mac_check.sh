@@ -114,6 +114,7 @@ function checkAapp() {
     checkCaskApp "Hammerspoon.app"         "hammerspoon"         "https://www.hammerspoon.org/"
     checkCaskApp "Clipy.app"               "clipy"               "https://clipy-app.com/"
     checkCaskApp "Ghostty.app"             "ghostty"             "https://ghostty.org/"
+    checkCaskApp "AltTab.app"              "alt-tab"             "https://alt-tab.app/"
 
     # runcat (Mac App Store only, cannot install via brew)
     if ! existInApplication RunCat.app; then
@@ -146,6 +147,7 @@ function checkLoginItems() {
     checkLoginItem "Hammerspoon" "/Applications/Hammerspoon.app"
     checkLoginItem "Clipy"       "/Applications/Clipy.app"
     checkLoginItem "RunCat"      "/Applications/RunCat.app"
+    checkLoginItem "AltTab"      "/Applications/AltTab.app"
 
     # herdr server: ログイン時に常駐させる (brew services)
     if brew services list 2>/dev/null | grep -E '^herdr' | grep -qE 'started'; then
