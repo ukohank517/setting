@@ -130,6 +130,36 @@ function checkAapp() {
     checkBrewCmd "herdr" "herdr" "https://herdr.dev/"
 }
 
+# $1: app name, $2: app path — ログイン時に自動起動するアプリを登録する
+function checkLoginItem() {
+    if osascript -e 'tell application "System Events" to get the name of every login item' 2>/dev/null | grep -q "$1"; then
+        printInfo "login item exists: $1"
+    else
+        printInfo "add login item: $1"
+        osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"$2\", hidden:false}" >/dev/null
+    fi
+}
+
+function checkLoginItems() {
+    printTitle "Login Item Check"
+
+    checkLoginItem "Hammerspoon" "/Applications/Hammerspoon.app"
+    checkLoginItem "Clipy"       "/Applications/Clipy.app"
+    checkLoginItem "RunCat"      "/Applications/RunCat.app"
+
+    # herdr server: ログイン時に常駐させる (brew services)
+    if brew services list 2>/dev/null | grep -E '^herdr' | grep -qE 'started'; then
+        printInfo "herdr service: already managed by brew services"
+    elif herdr status 2>/dev/null | grep -q 'status: running'; then
+        # 手動起動のサーバーが動いている間に brew services を始めるとソケットが競合する
+        printInfo "herdr server is running manually. to manage it at login:"
+        printInfo "  stop it first, then run: brew services start herdr"
+    else
+        printInfo "starting herdr service (auto start at login)"
+        brew services start herdr
+    fi
+}
+
 # macOS defaults は bin/mac_defaults.sh に切り出してある (make defaults で単体実行も可)
 source ./bin/mac_defaults.sh
 
@@ -207,5 +237,6 @@ printInfo "auto-install via brew when possible."
 setupBrew
 checkAapp
 installBrewPackages
+checkLoginItems
 setupMacDefaults
 openDlLink

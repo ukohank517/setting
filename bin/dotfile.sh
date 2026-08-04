@@ -18,6 +18,9 @@ syncSettingFile "bashrc"       ./src/bashrc.sh       ~/.bashrc
 syncSettingFile "ghostty" ./src/ghostty_config     ~/.config/ghostty/config
 syncSettingFile "herdr"   ./src/herdr_config.toml  ~/.config/herdr/config.toml
 
+# keyboard: caps lock -> ctrl (ログイン時に hidutil で適用される LaunchAgent)
+syncSettingFile "capslock-to-ctrl" ./src/launchagents/com.ukohank517.capslock-to-ctrl.plist ~/Library/LaunchAgents/com.ukohank517.capslock-to-ctrl.plist
+
 # hammerspoon (sync every file in the repo folder, keeping relative paths)
 if [ -d "/Applications/Hammerspoon.app" ]; then
     HAMMERSPOON_SET_FOLDER=./src/hammerspoon

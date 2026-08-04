@@ -38,6 +38,26 @@ function setMacDefault() {
     fi
 }
 
+# キーボードショートカット (AppleSymbolicHotKeys) の設定。
+# $1: hotkey id, $2: modifier flags, $3: 説明ラベル
+# modifier: cmd=1048576, ctrl=262144 (組み合わせは加算)
+function setSymbolicHotkey() {
+    CURRENT=$(defaults export com.apple.symbolichotkeys - 2>/dev/null | python3 -c "
+import sys, plistlib
+d = plistlib.loads(sys.stdin.buffer.read())
+v = d.get('AppleSymbolicHotKeys', {}).get('$1', {}).get('value', {}).get('parameters', [])
+print(v[2] if len(v) > 2 else '')" 2>/dev/null)
+    if [ "$CURRENT" = "$2" ]; then
+        printInfo "already set: $3"
+    else
+        printInfo "set: $3 (was: ${CURRENT:-<not set>})"
+        defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add "$1" \
+            "<dict><key>enabled</key><true/><key>value</key><dict><key>parameters</key><array><integer>32</integer><integer>49</integer><integer>$2</integer></array><key>type</key><string>standard</string></dict></dict>"
+        DEFAULTS_CHANGED=1
+        HOTKEY_CHANGED=1
+    fi
+}
+
 # same as setMacDefault but for per-host (-currentHost) preferences
 function setMacDefaultHost() {
     CURRENT=$(defaults -currentHost read "$1" "$2" 2>/dev/null)
@@ -53,6 +73,7 @@ function setMacDefaultHost() {
 function setupMacDefaults() {
     printTitle "macOS Defaults Check"
     DEFAULTS_CHANGED=0
+    HOTKEY_CHANGED=0
 
     ### キーリピート
     setMacDefault -g ApplePressAndHoldEnabled -bool false 0   # キー長押しでアクセント文字メニューを出さず、リピート入力する
@@ -91,12 +112,26 @@ function setupMacDefaults() {
     setMacDefault com.apple.dock autohide-delay         -float 0   0     # マウスを寄せたら即表示 (デフォルトは0.5秒待つ)
     setMacDefault com.apple.dock autohide-time-modifier -float 0.5 0.5   # 出入りのアニメーションを2倍速に
 
+    ### メニューバー時計
+    setMacDefault com.apple.menuextra.clock ShowSeconds   -bool true 1  # 秒を表示
+    setMacDefault com.apple.menuextra.clock ShowDayOfWeek -bool true 1  # 曜日を表示
+    setMacDefault com.apple.menuextra.clock ShowDate      -int  1    1  # 日付を常に表示 (0=スペースがあれば, 2=表示しない)
+
+    ### ショートカット: spotlight と入力ソース切替の swap (macOSデフォルトの逆)
+    setSymbolicHotkey 60 1048576 "前の入力ソース選択 = cmd+space"
+    setSymbolicHotkey 64 262144  "Spotlight = ctrl+space"
+
     ### Ghostty
     setMacDefault com.mitchellh.ghostty SecureInput -bool true 1  # Secure Keyboard Entry 常時オン (他アプリのキー入力盗み見を防ぐ)
 
+    if [ "$HOTKEY_CHANGED" = "1" ]; then
+        # symbolichotkeys は再ログインなしでこのコマンドで反映できる
+        /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u >/dev/null 2>&1
+    fi
+
     if [ "$DEFAULTS_CHANGED" -eq 1 ]; then
         printInfo "restarting Dock/Finder/SystemUIServer to apply..."
-        killall Dock Finder SystemUIServer 2>/dev/null
+        killall Dock Finder SystemUIServer ControlCenter 2>/dev/null
         printInfo "note: keyboard/trackpad changes need re-login (or restart) to apply."
 
         # 再起動するか確認する。デフォルトは「しない」(そのままEnter = n)。
