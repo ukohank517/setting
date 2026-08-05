@@ -8,16 +8,14 @@
 
 input=$(cat)
 
-IFS=$'\t' read -r model ctx five five_reset seven seven_reset added removed <<EOF
+IFS=$'\t' read -r model ctx five five_reset seven seven_reset <<EOF
 $(echo "$input" | jq -r '
   [ (.model.display_name // "?"),
     (.context_window.used_percentage // -1 | floor),
     (.rate_limits.five_hour.used_percentage // -1 | floor),
     (.rate_limits.five_hour.resets_at // 0),
     (.rate_limits.seven_day.used_percentage // -1 | floor),
-    (.rate_limits.seven_day.resets_at // 0),
-    (.cost.total_lines_added // -1),
-    (.cost.total_lines_removed // -1)
+    (.rate_limits.seven_day.resets_at // 0)
   ] | @tsv')
 EOF
 
@@ -52,13 +50,10 @@ echo "$line"
 
 HERDR_BIN=$(command -v herdr || echo /opt/homebrew/bin/herdr)
 
-# per-pane row in herdr's agents sidebar: context usage + lines changed + 5h reset
+# per-pane row in herdr's agents sidebar: context usage + 5h reset
 if [ -n "$HERDR_PANE_ID" ] && [ -x "$HERDR_BIN" ]; then
     args=()
     [ "$ctx" -ge 0 ] && args+=(--token "usage=CTX ${ctx}%")
-    if [ "$added" -ge 0 ] && [ "$removed" -ge 0 ]; then
-        args+=(--token "diff=+${added} -${removed}")
-    fi
     if [ "$five_reset" -gt 0 ]; then
         args+=(--token "reset=↻$(date -r "$five_reset" '+%m/%d %H:%M')")
     fi

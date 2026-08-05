@@ -26,15 +26,17 @@ directory = "~/.herdr/worktrees"
 # ask for a tab name when creating a tab. set false to skip the prompt.
 prompt_new_tab_name = true
 
-# claude panes get extra rows with context usage, lines changed and 5h reset time.
+# auto-copy mouse selections to the clipboard (herdr default, kept explicit).
+copy_on_select = true
+
+# claude panes get an extra row with context usage and 5h reset time.
 # values are pushed by claude code's statusLine script (src/claude_statusline.sh)
-# via `herdr pane report-metadata --token usage=... --token diff=... --token reset=...`.
+# via `herdr pane report-metadata --token usage=... --token reset=...`.
 [ui.sidebar.agents.rows_by_agent]
 claude = [
   ["state_icon", "workspace", "tab"],
   ["agent"],
-  [{ token = "$usage", dim = true }, { token = "$diff", dim = true }],
-  [{ token = "$reset", dim = true }],
+  [{ token = "$usage", dim = true }, { token = "$reset", dim = true }],
 ]
 
 # spaces rows show claude's account usage limits (/usage の 5h・7d ウィンドウ).
