@@ -18,6 +18,9 @@ syncSettingFile "bashrc"       ./src/bashrc.sh       ~/.bashrc
 syncSettingFile "ghostty" ./src/ghostty_config     ~/.config/ghostty/config
 syncSettingFile "herdr"   ./src/herdr_config.toml  ~/.config/herdr/config.toml
 
+# claude code (statusline also feeds herdr's sidebar, see herdr_config.toml)
+syncSettingFile "claude-statusline" ./src/claude_statusline.sh ~/.claude/statusline.sh
+
 # keyboard: caps lock -> ctrl (ログイン時に hidutil で適用される LaunchAgent)
 syncSettingFile "capslock-to-ctrl" ./src/launchagents/com.ukohank517.capslock-to-ctrl.plist ~/Library/LaunchAgents/com.ukohank517.capslock-to-ctrl.plist
 
