@@ -26,8 +26,8 @@ directory = "~/.herdr/worktrees"
 # ask for a tab name when creating a tab. set false to skip the prompt.
 prompt_new_tab_name = true
 
-# auto-copy mouse selections to the clipboard (herdr default, kept explicit).
-copy_on_select = true
+# don't auto-copy mouse selections; selection stays until cmd+c copies it.
+copy_on_select = false
 
 # claude panes get an extra row with context usage and 5h reset time.
 # values are pushed by claude code's statusLine script (src/claude_statusline.sh)
