@@ -5,8 +5,7 @@
 ## セットアップ手順
 
 ```bash
-make mac      # brew・アプリ・フォント・herdr を自動インストール、macOS defaults 設定
-make shell    # brew でシェル関連パッケージ (emacs, mysql, trash, wget, bash-completion)
+make mac      # brew・アプリ・フォント・CLI を自動インストール、macOS defaults 設定、ログインシェルを zsh に
 make dotfile  # 設定ファイルを git <-> local で対話同期
 ```
 
@@ -18,29 +17,29 @@ make dotfile  # 設定ファイルを git <-> local で対話同期
 |---|---|
 | アプリ | Chrome, VS Code, Docker, Postman, Hammerspoon, Clipy, Ghostty, AltTab |
 | フォント | HackGen Console NF (ghostty で使用) |
-| CLI | herdr |
+| CLI | herdr, emacs, mysql, wget, trash |
 | defaults | キーリピート高速化 (ApplePressAndHoldEnabled / InitialKeyRepeat / KeyRepeat) |
+| シェル | ログインシェルが zsh でなければ `chsh -s /bin/zsh` (+ 旧シェルの履歴を `~/.zsh_history` に移行) |
 
 - [RunCat](https://apps.apple.com/jp/app/runcat/id1429033973) だけは Mac App Store 専売なので、DLページが開く (手動インストール)
 - brew 自体も無ければ自動で入る
 
 ## make dotfile が同期するもの
 
-`bin/dotfile.sh` に一覧がある。新しい設定ファイルを管理したくなったら1行足す。
+`src/home/` 以下の全ファイル。`~` 内での配置をそのままミラーしているので、
+新しい設定ファイルを管理したくなったら同じパスで `src/home/` に置くだけで自動で拾われる
+(例: `src/home/.config/ghostty/config` → `~/.config/ghostty/config`)。
 
-| 名前 | local |
-|---|---|
-| emacs | `~/.emacs.d/init.el` |
-| vim | `~/.vimrc` |
-| git-branches | `~/.git-branches` |
-| bash_profile | `~/.bash_profile` |
-| bashrc | `~/.bashrc` |
-| ghostty | `~/.config/ghostty/config` |
-| herdr | `~/.config/herdr/config.toml` |
-| hammerspoon | `~/.hammerspoon/` 以下 |
+主なもの: zshrc / bashrc / vimrc / emacs / git-branches / ghostty / herdr /
+claude statusline / hammerspoon / LaunchAgents (caps lock -> ctrl)。
 
 差分があると diff を表示して local -> git / git -> local / vimdiff手動マージ / skip を選べる。
 git -> local は上書き前に `.bak` を残す。local -> git はコピーだけなのでコミットは手動。
+
+- ログインシェルは zsh (`~/.zshrc` が本体)。bash の設定は未使用だが管理は継続。
+- トークンなどの秘密情報・機体固有の設定は git に入れず `~/.zshrc.local` に書く
+  (zshrc が source する)。シェル設定に差分が出たとき「diff -> ~/.zshrc.local」を
+  選ぶと、local 側の差分行が git に入らずそちらへ退避される。
 
 ## ターミナル構成
 
@@ -48,7 +47,7 @@ git -> local は上書き前に `.bak` を残す。local -> git はコピーだ�
   分割やタブ管理はしない。`cmd+d` は herdr の分割キーに転送している。
 - **herdr** … ターミナル多重化 + AIエージェント管理。プレフィックスは `ctrl+b`。
   分割・タブ・ワークスペース・セッション永続化はすべてこちら。
-  ペイン境界に pwd が出る (bashrc の `__herdr_pane_title` フック)。
+  ペイン境界に pwd が出る (zshrc の `__herdr_pane_title` フック)。
 
 ## アプリ個別メモ
 
@@ -62,7 +61,7 @@ setting sync オンする
 
 ### [hammerspoon](https://www.hammerspoon.org/)
 
-ウィンドウ操作。設定は `src/hammerspoon/` (ShiftIt spoon + カスタムホットキー)
+ウィンドウ操作。設定は `src/home/.hammerspoon/` (ShiftIt spoon + カスタムホットキー)
 
 ### [clipy](https://clipy-app.com/)
 

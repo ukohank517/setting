@@ -87,23 +87,36 @@ function syncSettingFile() {
     echo "--------------------------------------------------"
     # repeat the target here: with a long diff, the header has scrolled away
     echo "how to sync? -> ${NAME} (${LOCAL_FILE})"
-    selectMenu \
-        "local -> git   (copy local file into this repo)" \
-        "git -> local   (overwrite local file)" \
-        "merge manually (vimdiff. left=local, right=git. after save&quit, local is copied to git)" \
-        "skip"
 
-    case "$SELECT_RESULT" in
-        0)
+    # shell rc files get an extra option: keep the diff OUT of git by moving
+    # the local-only lines into ~/.zshrc.local (machine-local, unmanaged,
+    # sourced by zshrc). tokens and per-machine settings belong there.
+    MENU_OPTIONS=(
+        "local -> git   (copy local file into this repo)"
+        "git -> local   (overwrite local file)"
+        "merge manually (vimdiff. left=local, right=git. after save&quit, local is copied to git)"
+    )
+    case "$LOCAL_FILE" in
+        */.zshrc|*/.bashrc|*/.bash_profile)
+            MENU_OPTIONS+=("diff -> ~/.zshrc.local (keep it out of git, then git -> local)")
+            ;;
+    esac
+    MENU_OPTIONS+=("skip")
+
+    selectMenu "${MENU_OPTIONS[@]}"
+    CHOICE=${MENU_OPTIONS[$SELECT_RESULT]}
+
+    case "$CHOICE" in
+        "local -> git"*)
             cp "$LOCAL_FILE" "$GIT_FILE"
             echo "done: local -> git. check 'git diff' and commit it."
             ;;
-        1)
+        "git -> local"*)
             cp "$LOCAL_FILE" "${LOCAL_FILE}.bak"
             cp "$GIT_FILE" "$LOCAL_FILE"
             echo "done: git -> local. (backup: ${LOCAL_FILE}.bak)"
             ;;
-        2)
+        "merge manually"*)
             vimdiff "$LOCAL_FILE" "$GIT_FILE"
             if cmp -s "$GIT_FILE" "$LOCAL_FILE"; then
                 echo "done: merged, git and local are identical."
@@ -116,6 +129,19 @@ function syncSettingFile() {
                     echo "skipped copy. git and local are still different."
                 fi
             fi
+            ;;
+        "diff -> "*)
+            LOCAL_ONLY=$(LC_ALL=C grep -avxFf "$GIT_FILE" "$LOCAL_FILE")
+            if [ -n "$LOCAL_ONLY" ]; then
+                touch ~/.zshrc.local
+                chmod 600 ~/.zshrc.local
+                # append only lines that are not already in ~/.zshrc.local
+                echo "$LOCAL_ONLY" | LC_ALL=C grep -avxFf ~/.zshrc.local - >> ~/.zshrc.local
+            fi
+            cp "$LOCAL_FILE" "${LOCAL_FILE}.bak"
+            cp "$GIT_FILE" "$LOCAL_FILE"
+            echo "done: local-only lines moved to ~/.zshrc.local, local file now matches git."
+            echo "      (backup: ${LOCAL_FILE}.bak)"
             ;;
         *)
             echo "skipped."
