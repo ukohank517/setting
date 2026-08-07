@@ -60,3 +60,10 @@ alias memo="echo '[TODO]: set memo file path'" #b coder
 #flumake for emacs : https://qiita.com/awakia/items/5c97b02dcc3c7fd20279
 
 source ~/.git-branches
+
+# machine-local settings and secrets (tokens etc.) live here, OUTSIDE of
+# git management. make dotfile offers to move local-only diff lines of
+# this file into it instead of committing them.
+if [ -f ~/.bashrc.local ]; then
+    source ~/.bashrc.local
+fi

@@ -1,6 +1,8 @@
 ########################################################
 #################### global setting ####################
 ########################################################
+# NOTE: 現在のログインシェルは bash (~/.bashrc が本体)。
+# このファイルは zsh を使うとき用に残してある。
 
 # zsh prompt style (same look as bashrc: user@host:path (branch) time)
 setopt PROMPT_SUBST
@@ -59,6 +61,10 @@ history-line-menu() {
     if (( st != 0 )) || [ -z "$BUFFER" ] || [ "${BUFFER% }" = "$_hlm_prefix" ]; then
         BUFFER=$orig_buffer # no match, aborted, or empty choice: keep typed line
         CURSOR=$orig_cursor
+    elif [[ $KEYS == ($'\r'|$'\n'|$'\x10'|$'\x0e') ]]; then
+        # $KEYS is the key that closed the menu, or still Ctrl-P/N when
+        # there was only one candidate: both mean "decided" -> line end
+        CURSOR=$#BUFFER
     else
         CURSOR=$#_hlm_prefix # cursor stays where typing stopped
     fi
@@ -107,7 +113,14 @@ tab-complete-stay() {
     } always {
         zle -D zle-line-pre-redraw # never leave the pin hook behind
     }
-    CURSOR=$#_hlm_prefix
+    # $KEYS is the key that closed the menu, or still Tab when there was
+    # only one candidate (nothing to navigate). both mean "decided": go to
+    # the line end. any other key means the user is editing at the pin.
+    if [[ $KEYS == ($'\r'|$'\n'|$'\t') ]]; then
+        CURSOR=$#BUFFER
+    else
+        CURSOR=$#_hlm_prefix
+    fi
 }
 zle -N tab-complete-stay
 bindkey '^I' tab-complete-stay
