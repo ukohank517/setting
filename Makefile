@@ -1,14 +1,15 @@
+.PHONY: all mac defaults dotfile
+
 all:
-	echo "do some setting"
+	@echo "make mac      : app/font/CLI check & auto-install, macOS defaults, login shell -> zsh"
+	@echo "make defaults : macOS defaults only"
+	@echo "make dotfile  : sync config files between git (src/home) and local (~)"
 
 mac:
 	bash ./bin/mac_check.sh
 
 defaults:
 	bash ./bin/mac_defaults.sh
-
-shell:
-	bash ./bin/shell_setting.sh
 
 dotfile:
 	bash ./bin/dotfile.sh
@@ -18,4 +19,3 @@ dotfile:
 	else \
 		echo "herdr not running, config will be read on next launch"; \
 	fi
-
