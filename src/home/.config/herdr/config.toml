@@ -52,6 +52,10 @@ claude = [
 # spaces rows show claude's account usage limits (/usage の 5h・7d ウィンドウ).
 # values are pushed by claude code's statusLine script (src/home/.claude/statusline.sh)
 # via `herdr workspace report-metadata --token usage=... --token week=...`.
+# the account usage rows ($usage/$week) only render under the top workspace:
+# statusline.sh reports them there and empty token rows collapse. keep them
+# after the name row — a row placed first would drag the entry's remaining
+# rows (including the workspace name) one indent level right.
 [ui.sidebar.spaces]
 rows = [
   ["state_icon", "workspace"],
