@@ -30,7 +30,7 @@ prompt_new_tab_name = true
 copy_on_select = false
 
 # claude panes get an extra row with context usage and 5h reset time.
-# values are pushed by claude code's statusLine script (src/claude_statusline.sh)
+# values are pushed by claude code's statusLine script (src/home/.claude/statusline.sh)
 # via `herdr pane report-metadata --token usage=... --token reset=...`.
 [ui.sidebar.agents.rows_by_agent]
 claude = [
@@ -40,7 +40,7 @@ claude = [
 ]
 
 # spaces rows show claude's account usage limits (/usage の 5h・7d ウィンドウ).
-# values are pushed by claude code's statusLine script (src/claude_statusline.sh)
+# values are pushed by claude code's statusLine script (src/home/.claude/statusline.sh)
 # via `herdr workspace report-metadata --token usage=... --token week=...`.
 [ui.sidebar.spaces]
 rows = [
