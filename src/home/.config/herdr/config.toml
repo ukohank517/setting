@@ -18,9 +18,19 @@ prefix = "cmd+g"
 # workspace : prefix+w picker / prefix+shift+n new / prefix+shift+g new worktree
 # other     : prefix+z zoom / prefix+e scrollback / prefix+q detach / prefix+? help
 
+# navigate mode (prefix+g): move between workspaces with ctrl+n/p as well as arrows.
+# the workspace picker (prefix+w) is hardcoded to j/k/arrows + / search.
+navigate_workspace_up   = ["up", "ctrl+p"]
+navigate_workspace_down = ["down", "ctrl+n"]
+
 [worktrees]
 # where `prefix+shift+g` creates git worktrees
 directory = "~/.herdr/worktrees"
+
+[experimental]
+# prefixモード中だけ入力ソースをASCII(英語)に切り替え、抜けたら元のIMEに戻す。
+# 日本語入力のままでも prefix+w 等がIMEに食われなくなる。macOS best-effort.
+switch_ascii_input_source_in_prefix = true
 
 [ui]
 # ask for a tab name when creating a tab. set false to skip the prompt.
