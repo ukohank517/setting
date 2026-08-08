@@ -4,7 +4,8 @@
 # - prints a status line inside claude code (model | context % | usage limits)
 # - mirrors account usage limits (/usage の 5h・7d ウィンドウ) into herdr's
 #   sidebar spaces rows via workspace metadata ($usage / $week tokens,
-#   see [ui.sidebar.spaces] in src/home/.config/herdr/config.toml)
+#   see [ui.sidebar.spaces] in src/home/.config/herdr/config.toml).
+#   account-wide values, so they are pinned to the top workspace only.
 
 input=$(cat)
 
@@ -63,14 +64,20 @@ if [ -n "$HERDR_PANE_ID" ] && [ -x "$HERDR_BIN" ]; then
     fi
 fi
 
-# spaces rows in herdr's sidebar: account-wide usage limits,
-# reported to the workspace this claude session runs in
-if [ -n "$HERDR_WORKSPACE_ID" ] && [ -x "$HERDR_BIN" ]; then
+# spaces rows in herdr's sidebar: account-wide usage limits.
+# the values are global to the account, so they are pinned to the sidebar's
+# top workspace instead of the one this session runs in — one row, no
+# duplicates, and unaffected by panes moving between workspaces.
+if [ "$HERDR_ENV" = 1 ] && [ -x "$HERDR_BIN" ]; then
     args=()
     [ -n "$usage5h" ] && args+=(--token "usage=$usage5h")
     [ -n "$usage7d" ] && args+=(--token "week=$usage7d")
     if [ ${#args[@]} -gt 0 ]; then
-        "$HERDR_BIN" workspace report-metadata "$HERDR_WORKSPACE_ID" \
-            --source claude-statusline "${args[@]}" >/dev/null 2>&1 &
+        (
+            top_ws=$("$HERDR_BIN" workspace list 2>/dev/null \
+                | jq -r '.result.workspaces[0].workspace_id // empty')
+            [ -n "$top_ws" ] && "$HERDR_BIN" workspace report-metadata "$top_ws" \
+                --source claude-statusline "${args[@]}"
+        ) >/dev/null 2>&1 &
     fi
 fi
