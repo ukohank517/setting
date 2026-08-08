@@ -4,7 +4,7 @@
 # - prints a status line inside claude code (model | context % | usage limits)
 # - mirrors account usage limits (/usage の 5h・7d ウィンドウ) into herdr's
 #   sidebar spaces rows via workspace metadata ($usage / $week tokens,
-#   see [ui.sidebar.spaces] in herdr_config.toml)
+#   see [ui.sidebar.spaces] in src/home/.config/herdr/config.toml)
 
 input=$(cat)
 
