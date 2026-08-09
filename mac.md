@@ -33,10 +33,12 @@ make dotfile  # 設定ファイルを git <-> local で対話同期
 主なもの: zshrc / bashrc / vimrc / emacs / git-branches / ghostty / herdr /
 claude statusline / hammerspoon / LaunchAgents (caps lock -> ctrl)。
 
-同期のあと、claude code の `~/.claude/settings.json` に `statusLine` が
-設定されているかを確認し、未設定なら書き込む (このファイルは claude code 自身が
-書き換えるので、丸ごとの同期はしない)。これで statusline.sh が実際に動き、
-herdr のペイン行・spaces 行に使用量が出る。
+同期のあと、claude code の `~/.claude/settings.json` に
+`src/claude/settings-fragment.json` の管理キーをディープマージする
+(このファイルは claude code 自身が書き換えるので、丸ごとの同期はしない)。
+中身は statusLine (statusline.sh が動いて herdr のペイン行・spaces 行に
+使用量が出る) と、会話画面に送信/完了時刻を出す hooks (⏰/✅。表示専用で
+モデルには送られずトークン消費なし)。
 
 差分があると diff を表示して local -> git / git -> local / vimdiff手動マージ / skip を選べる。
 git -> local は上書き前に `.bak` を残す。local -> git はコピーだけなのでコミットは手動。
