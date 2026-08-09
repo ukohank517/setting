@@ -9,7 +9,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '{\"systemMessage\":\"⏰ %s\"}' \"$(date +%H:%M:%S)\""
+            "command": "printf '{\"systemMessage\":\"💬 %s\"}' \"$(date +%H:%M:%S)\""
           }
         ]
       }
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "printf '{\"systemMessage\":\"✅ %s\"}' \"$(date +%H:%M:%S)\""
+            "command": "printf '{\"systemMessage\":\"🤖 %s\"}' \"$(date +%H:%M:%S)\""
           }
         ]
       }
