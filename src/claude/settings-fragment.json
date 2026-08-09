@@ -3,7 +3,6 @@
     "type": "command",
     "command": "bash ~/.claude/statusline.sh"
   },
-  "showMessageTimestamps": true,
   "hooks": {
     "UserPromptSubmit": [
       {
