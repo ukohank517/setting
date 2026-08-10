@@ -15,11 +15,17 @@ prefix = "cmd+g"
 
 # tab       : prefix+c new / prefix+n next / prefix+p prev / prefix+1..9 jump
 # pane      : prefix+v split-v / prefix+- split-h / prefix+h j k l focus
-# workspace : prefix+w picker / prefix+shift+n new / prefix+shift+g new worktree
-# other     : prefix+z zoom / prefix+e scrollback / prefix+q detach / prefix+? help
+# workspace : prefix+w navigate / prefix+shift+n new / prefix+shift+g new worktree
+# other     : prefix+g goto picker / prefix+z zoom / prefix+e scrollback
+#             prefix+q detach / prefix+? help
 
-# navigate mode (prefix+g): move between workspaces with ctrl+n/p as well as arrows.
-# the workspace picker (prefix+w) is hardcoded to j/k/arrows + / search.
+# navigate mode == the prefix+w workspace surface. move the selection with
+# ctrl+n/p as well as arrows. a binding may be an array when one action
+# needs several shortcuts.
+#
+# prefix+g (goto picker) is a separate surface with its own hardcoded keys,
+# not configurable as of 0.8.0: j/k or arrows in the list, "/" to search,
+# and ctrl+n/p only once the search box has focus.
 navigate_workspace_up   = ["up", "ctrl+p"]
 navigate_workspace_down = ["down", "ctrl+n"]
 
