@@ -56,6 +56,22 @@ fi
 #################### user setting ####################
 ######################################################
 
+# `claude` prefers a launcher the project ships, so a repo can pin its own
+# CLAUDE_CONFIG_DIR (= which account), model, or flags. only ./bin/claude.sh
+# is looked at, so this applies at the repo root and nowhere else.
+#
+# the fallback is deliberately limited to "this directory ships no launcher".
+# bin/claude.sh ends up exec'ing claude, so its exit status IS claude's --
+# falling back on a non-zero exit would relaunch claude every time you ctrl-c
+# out of it. `command` is required too: a bare `claude` re-enters this function.
+function claude() {
+    if [ -r ./bin/claude.sh ]; then
+        sh ./bin/claude.sh "$@"
+        return $?
+    fi
+    command claude "$@"
+}
+
 alias memo="echo '[TODO]: set memo file path'" #b coder
 #flumake for emacs : https://qiita.com/awakia/items/5c97b02dcc3c7fd20279
 
