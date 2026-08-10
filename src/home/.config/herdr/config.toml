@@ -48,10 +48,16 @@ copy_on_select = false
 # claude panes get an extra row with context usage and 5h reset time.
 # values are pushed by claude code's statusLine script (src/home/.claude/statusline.sh)
 # via `herdr pane report-metadata --token usage=... --token reset=...`.
+#
+# state_text spells the state out because state_icon alone is colour-only for
+# most of it: blocked, working and done all render the same filled dot and
+# differ only in red/yellow/teal (state_dot() in herdr's src/ui/status.rs).
+# it rides on the agent row -- that row holds just "claude", so this costs no
+# extra height and keeps the name row clear of the 26-column sidebar limit.
 [ui.sidebar.agents.rows_by_agent]
 claude = [
   ["state_icon", "workspace", "tab"],
-  ["agent"],
+  ["agent", "state_text"],
   [{ token = "$usage", dim = true }, { token = "$reset", dim = true }],
 ]
 
