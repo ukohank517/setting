@@ -15,6 +15,7 @@ prefix = "cmd+g"
 
 # tab       : prefix+c new / prefix+n next / prefix+p prev / prefix+1..9 jump
 # pane      : prefix+v split-v / prefix+- split-h / prefix+h j k l focus
+#             (emacs-style ctrl+b/n/p/f also focus left/down/up/right)
 # workspace : prefix+w navigate / prefix+shift+n new / prefix+shift+g new worktree
 # other     : prefix+g goto picker / prefix+z zoom / prefix+e scrollback
 #             prefix+q detach / prefix+? help
@@ -28,6 +29,13 @@ prefix = "cmd+g"
 # and ctrl+n/p only once the search box has focus.
 navigate_workspace_up   = ["up", "ctrl+p"]
 navigate_workspace_down = ["down", "ctrl+n"]
+
+# directional pane focus: keep the default vim keys and add emacs-style
+# ctrl+b/n/p/f (same left/down/up/right mapping as the shell line editor).
+focus_pane_left  = ["prefix+h", "prefix+ctrl+b"]
+focus_pane_down  = ["prefix+j", "prefix+ctrl+n"]
+focus_pane_up    = ["prefix+k", "prefix+ctrl+p"]
+focus_pane_right = ["prefix+l", "prefix+ctrl+f"]
 
 [worktrees]
 # where `prefix+shift+g` creates git worktrees
