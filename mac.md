@@ -64,6 +64,14 @@ git -> local は上書き前に `.bak` を残す。local -> git はコピーだ�
 
 設定→規定のブラウザよりデフォルト設定変更
 
+Gemini ランチャーのショートカットを `⌃⌥⌘G` に変更する
+(`chrome://settings/ai/gemini`)。デフォルトの Ctrl+G は**グローバル**登録で
+ターミナルの herdr prefix を横取りするため。設定はマシンローカル
+(Local State) で Chrome Sync されないので PC ごとに手動で行う。
+`make mac` が設定済みかチェックする (自動適用はしない)。
+Chrome フォーカス時の Ctrl+G は hammerspoon が ⌃⌥⌘G に変換して
+Gemini のトグルを維持する。
+
 Gemini in Chrome のランチャーショートカットを `⌃⌥⌘G` に変更する
 (`chrome://settings/ai/gemini`。既定の Ctrl+G は**グローバル**に登録されて
 ターミナルの herdr prefix を横取りするため。Chrome フォーカス時の Ctrl+G は

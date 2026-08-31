@@ -113,3 +113,30 @@ local frontApp = hs.application.frontmostApplication()
 if frontApp and frontApp:name() == 'Google Chrome' then
     geminiToggle:enable()
 end
+
+-- ctrl+g toggles Gemini, but only while Chrome is frontmost.
+-- Chrome's Gemini launcher shortcut is global-only and its default Ctrl+G
+-- stole the key from terminals (ctrl+g is the herdr prefix), so the launcher
+-- is set to ctrl+alt+cmd+g in chrome://settings/ai/gemini and this bind
+-- makes ctrl+g a Chrome-scoped alias for it.
+local geminiToggle = hs.hotkey.new({ 'ctrl' }, 'g', function()
+    hs.eventtap.keyStroke({ 'ctrl', 'alt', 'cmd' }, 'g', 0)
+end)
+
+-- global on purpose: a local watcher gets garbage-collected and silently stops
+geminiChromeWatcher = hs.application.watcher.new(function(name, event)
+    if name == 'Google Chrome' then
+        if event == hs.application.watcher.activated then
+            geminiToggle:enable()
+        elseif event == hs.application.watcher.deactivated then
+            geminiToggle:disable()
+        end
+    end
+end)
+geminiChromeWatcher:start()
+
+-- cover the case where Chrome is already frontmost when this config loads
+local frontApp = hs.application.frontmostApplication()
+if frontApp and frontApp:name() == 'Google Chrome' then
+    geminiToggle:enable()
+end

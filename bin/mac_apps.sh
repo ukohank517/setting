@@ -147,6 +147,41 @@ function checkLoginItems() {
     fi
 }
 
+# chrome の Gemini ランチャーはデフォルトで「グローバル Ctrl+G」を登録し、
+# ターミナルの herdr prefix (ctrl+g) を横取りする。⌃⌥⌘G への変更は
+# chrome://settings/ai/gemini での手動操作が必要 (保存先の Local State は
+# マシンローカルで Chrome Sync されない) ため、ここでは確認だけ行う。
+# chrome フォーカス時の ctrl+g は hammerspoon が ⌃⌥⌘G に変換して維持する。
+function checkChromeGeminiHotkey() {
+    printTitle "Chrome Gemini Hotkey Check"
+
+    LOCAL_STATE="$HOME/Library/Application Support/Google/Chrome/Local State"
+    EXPECTED="Command+Ctrl+Alt+G"
+
+    if [ ! -f "$LOCAL_STATE" ]; then
+        printInfo "chrome is not set up yet. after first launch, set the Gemini"
+        printInfo "launcher shortcut to ctrl+opt+cmd+G at chrome://settings/ai/gemini"
+        return 0
+    fi
+
+    HOTKEY=$(python3 -c "
+import json, sys
+try:
+    with open('$LOCAL_STATE', encoding='utf-8') as f:
+        print(json.load(f).get('glic', {}).get('launcher_hotkey', ''))
+except Exception:
+    sys.exit(1)
+" 2>/dev/null)
+
+    if [ "$HOTKEY" = "$EXPECTED" ]; then
+        printInfo "Gemini launcher hotkey: OK ($EXPECTED)"
+    else
+        printError " Gemini launcher hotkey is '${HOTKEY:-unset}' (want: $EXPECTED)"
+        printError " it grabs ctrl+g SYSTEM-WIDE and steals the herdr prefix."
+        printError " fix manually: chrome://settings/ai/gemini -> press ctrl+opt+cmd+G"
+    fi
+}
+
 function installBrewPackages() {
     if [ $(( ${#BREW_CASKS[@]} + ${#BREW_FORMULAE[@]} )) -eq 0 ]; then
         return 0
