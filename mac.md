@@ -72,11 +72,6 @@ Gemini ランチャーのショートカットを `⌃⌥⌘G` に変更する
 Chrome フォーカス時の Ctrl+G は hammerspoon が ⌃⌥⌘G に変換して
 Gemini のトグルを維持する。
 
-Gemini in Chrome のランチャーショートカットを `⌃⌥⌘G` に変更する
-(`chrome://settings/ai/gemini`。既定の Ctrl+G は**グローバル**に登録されて
-ターミナルの herdr prefix を横取りするため。Chrome フォーカス時の Ctrl+G は
-hammerspoon が ⌃⌥⌘G に変換して Gemini のトグルを維持する)
-
 ### [Visual Studio Code](https://code.visualstudio.com/)
 
 setting sync オンする
