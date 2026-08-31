@@ -9,9 +9,12 @@
 name = "tokyo-night"
 
 [keys]
-# prefix key. cmd+g needs the host terminal to forward cmd keys
-# (ghostty does via the kitty keyboard protocol + super+g unbind).
-prefix = "cmd+g"
+# prefix key. ctrl+g is a plain terminal keystroke, so this works in any
+# terminal (ghostty, Terminal.app, ...) with no host-side setup.
+# ctrl+g is readline/emacs abort, but unused in my workflow (C-c instead).
+# press ctrl+g twice to send a literal ctrl+g to the pane app
+# (e.g. gemini cli's "open in external editor").
+prefix = "ctrl+g"
 
 # tab       : prefix+c new / prefix+n next / prefix+p prev / prefix+1..9 jump
 # pane      : prefix+v split-v / prefix+- split-h / prefix+h j k l focus
