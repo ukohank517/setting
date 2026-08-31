@@ -52,8 +52,9 @@ git -> local は上書き前に `.bak` を残す。local -> git はコピーだ�
 
 - **Ghostty** … 入れ物 (描画・フォント・テーマ)。TokyoNight + HackGen Console NF。
   分割やタブ管理はしない。`cmd+d` は herdr の分割キーに転送している。
-- **herdr** … ターミナル多重化 + AIエージェント管理。プレフィックスは `cmd+g`
-  (Ghostty 側で `super+g` を unbind して herdr に流している。既定は `ctrl+b`)。
+- **herdr** … ターミナル多重化 + AIエージェント管理。プレフィックスは `ctrl+g`
+  (素の端末キーなのでターミナル側の設定不要。既定は `ctrl+b`。
+  2度押しでペイン内アプリに `ctrl+g` をそのまま送れる)。
   分割・タブ・ワークスペース・セッション永続化はすべてこちら。
   ペイン境界に pwd が出る (bashrc の `__herdr_pane_title` フック)。
 
