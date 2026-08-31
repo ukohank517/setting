@@ -21,6 +21,7 @@ setupBrew
 checkAapp
 installBrewPackages
 checkLoginItems
+checkChromeGeminiHotkey
 setupMacDefaults
 setupDefaultShell
 openDlLink
