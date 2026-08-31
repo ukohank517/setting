@@ -12,6 +12,15 @@ function printInfo(){
     echo "  [info]" $1
 }
 
+# next-action banner: green + bold so it stands out at the end of a long run
+function printNext(){
+    echo $'\e[1;32m'
+    echo " ╔══════════════════════════════════════════════╗"
+    printf " ║ ➜ NEXT: %-37s║\n" "$1"
+    echo " ╚══════════════════════════════════════════════╝"
+    echo $'\e[0m'
+}
+
 function printTitle(){
     echo "##################################################" # len: 50
     TITLE_LEN=${#1}

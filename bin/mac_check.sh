@@ -4,7 +4,7 @@
 #   bin/mac_lib.sh      print helpers
 #   bin/mac_apps.sh     app / font / CLI checks + auto-install via brew
 #   bin/mac_defaults.sh macOS defaults (make defaults で単体実行も可)
-#   bin/mac_shell.sh    login shell -> zsh (+ history migration)
+#   bin/mac_shell.sh    login shell -> bash (+ history migration)
 
 cd "$(dirname "$0")/.." || exit 1
 
@@ -25,3 +25,7 @@ checkChromeGeminiHotkey
 setupMacDefaults
 setupDefaultShell
 openDlLink
+
+printTitle "done"
+printNext "make dotfile  (sync configs to ~)"
+printInfo "syncs: ghostty / herdr / hammerspoon / claude keybindings / shell rc ..."
