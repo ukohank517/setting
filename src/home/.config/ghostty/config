@@ -32,3 +32,16 @@ window-save-state = always
 # treat option as alt, so emacs style M-b / M-f work in bash and emacs.
 # set to false if you need option for special characters.
 macos-option-as-alt = true
+
+###############################################
+#################### shell ####################
+###############################################
+
+# ghostty sets TERM=xterm-ghostty, which most servers have no terminfo for,
+# so less/vim over ssh warn "terminal is not fully functional".
+# ssh-env: the shell integration wraps `ssh` to send TERM=xterm-256color
+# (plus COLORTERM etc.) to the remote, while the local shell keeps
+# xterm-ghostty. add `ssh-terminfo` to instead install xterm-ghostty on the
+# remote via tic (needs tic there, falls back to ssh-env when missing).
+# unlisted features (cursor, title, path, ...) keep their defaults.
+shell-integration-features = ssh-env
