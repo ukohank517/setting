@@ -19,22 +19,38 @@ prefix = "ctrl+g"
 # tab       : prefix+c new / prefix+n next / prefix+p prev / prefix+1..9 jump
 # pane      : prefix+v split-v / prefix+- split-h / prefix+h j k l focus
 #             (emacs-style ctrl+b/n/p/f also focus left/down/up/right)
-# workspace : prefix+w navigate / prefix+shift+n new / prefix+shift+g new worktree
+# workspace : prefix+w navigate (sticky pane move too) / prefix+shift+n new
+#             prefix+shift+g new worktree
 # other     : prefix+g goto picker / prefix+z zoom / prefix+e scrollback
 #             prefix+q detach / prefix+? help
 
-# navigate mode == the prefix+w workspace surface. move the selection with
-# ctrl+n/p as well as arrows. a binding may be an array when one action
-# needs several shortcuts.
+# navigate mode == the prefix+w surface. it stays open until enter/esc, so
+# it doubles as a "sticky" pane-move mode: prefix+w, then arrows as many
+# times as needed, enter (or esc) to leave. directional pane focus keeps
+# navigate mode active since 0.8.0. a binding may be an array when one
+# action needs several shortcuts.
+#
+# key split inside navigate mode:
+#   ctrl+p/n : workspace selection (sidebar cursor), enter to switch
+#   arrows   : pane focus (left/right are built-in aliases and cannot be
+#              listed here; up/down are bound explicitly)
+# a key shared between navigate_workspace_* and navigate_pane_* is a
+# conflict: `herdr config check` keeps the workspace binding and disables
+# the pane one, so ctrl+p/n are deliberately not on the pane side.
 #
 # prefix+g (goto picker) is a separate surface with its own hardcoded keys,
 # not configurable as of 0.8.0: j/k or arrows in the list, "/" to search,
 # and ctrl+n/p only once the search box has focus.
-navigate_workspace_up   = ["up", "ctrl+p"]
-navigate_workspace_down = ["down", "ctrl+n"]
+navigate_workspace_up   = "ctrl+p"
+navigate_workspace_down = "ctrl+n"
+navigate_pane_left      = "h"
+navigate_pane_down      = ["j", "down"]
+navigate_pane_up        = ["k", "up"]
+navigate_pane_right     = "l"
 
-# directional pane focus: keep the default vim keys and add emacs-style
-# ctrl+b/n/p/f (same left/down/up/right mapping as the shell line editor).
+# directional pane focus (one-shot): keep the default vim keys and add
+# emacs-style ctrl+b/n/p/f (same left/down/up/right mapping as the shell
+# line editor). for repeated moves use navigate mode above instead.
 focus_pane_left  = ["prefix+h", "prefix+ctrl+b"]
 focus_pane_down  = ["prefix+j", "prefix+ctrl+n"]
 focus_pane_up    = ["prefix+k", "prefix+ctrl+p"]
