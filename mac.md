@@ -56,6 +56,8 @@ git -> local は上書き前に `.bak` を残す。local -> git はコピーだ�
   (素の端末キーなのでターミナル側の設定不要。既定は `ctrl+b`。
   2度押しでペイン内アプリに `ctrl+g` をそのまま送れる)。
   分割・タブ・ワークスペース・セッション永続化はすべてこちら。
+  ペイン移動は一発なら `prefix+ctrl+b/n/p/f`、連続なら `prefix+w` で navigate モードに入って
+  矢印キーを好きなだけ押し、Enter (または Esc) で抜ける (同モード内の `ctrl+p/n` は spaces 選択)。
   ペイン境界に pwd が出る (bashrc の `__herdr_pane_title` フック)。
 
 ## アプリ個別メモ
