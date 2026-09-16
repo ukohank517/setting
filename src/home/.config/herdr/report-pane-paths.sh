@@ -61,7 +61,7 @@ while IFS= read -r p; do
     i=$((i + 1))
     [ "$i" -gt "$MAX" ] && break
     p=${p#"$STRIP_PREFIX"}
-    p=${p/#$HOME/\~}
+    p=${p/#$HOME/~}   # an escaped \~ here would insert a literal backslash
     if [ "${#p}" -gt "$width" ]; then
         # drop leading directories until "…/rest" fits; if even the last
         # component is too long, cut it mid-way instead.
