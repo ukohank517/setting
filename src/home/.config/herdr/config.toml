@@ -133,19 +133,24 @@ claude = [
 # instead ("~/path (branch)", set by the shell precmd hook and statusline.sh),
 # which is per pane rather than per workspace.
 #
-# $path1..$path6 list every pane in the workspace, one row each in pane
-# order: a state mark (● agent working, ◆ blocked, ○ idle, · plain shell)
-# and the pane's cwd with the ~/workspace/ prefix dropped. pushed by
+# $path1..$path6 / $focus1..$focus6 list every pane in the workspace, one row
+# each in pane order: a state mark (● agent working, ◆ blocked, ○ idle,
+# · plain shell) and the pane's cwd with the ~/workspace/ prefix dropped.
+# row N holds either $pathN or $focusN: the globally focused pane is sent as
+# $focusN (bright, bold), all others as $pathN (dim); the empty one is
+# elided, so no separator appears. pushed by
 # ~/.config/herdr/report-pane-paths.sh from the shell precmd hook in
-# .zshrc/.bashrc and from statusline.sh; unused slots are cleared so the rows
-# collapse. MAX in that script must match the number of rows here.
+# .zshrc/.bashrc, from statusline.sh, and from pane-paths-watch.py, which
+# follows herdr's focus / pane / agent-state events so the marks and the
+# highlight move at once. unused slots are cleared so the rows collapse.
+# MAX in the script must match the number of rows here.
 [ui.sidebar.spaces]
 rows = [
   ["state_icon", "workspace"],
-  [{ token = "$path1", dim = true }],
-  [{ token = "$path2", dim = true }],
-  [{ token = "$path3", dim = true }],
-  [{ token = "$path4", dim = true }],
-  [{ token = "$path5", dim = true }],
-  [{ token = "$path6", dim = true }],
+  [{ token = "$path1", dim = true }, { token = "$focus1", fg = "#c0caf5", bold = true, dim = false }],
+  [{ token = "$path2", dim = true }, { token = "$focus2", fg = "#c0caf5", bold = true, dim = false }],
+  [{ token = "$path3", dim = true }, { token = "$focus3", fg = "#c0caf5", bold = true, dim = false }],
+  [{ token = "$path4", dim = true }, { token = "$focus4", fg = "#c0caf5", bold = true, dim = false }],
+  [{ token = "$path5", dim = true }, { token = "$focus5", fg = "#c0caf5", bold = true, dim = false }],
+  [{ token = "$path6", dim = true }, { token = "$focus6", fg = "#c0caf5", bold = true, dim = false }],
 ]

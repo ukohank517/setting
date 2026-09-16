@@ -111,16 +111,28 @@ if [ -n "$HERDR_PANE_ID" ] && [ -x "$HERDR_BIN" ]; then
     "$HERDR_BIN" pane report-metadata "$HERDR_PANE_ID" \
         --source claude-statusline "${args[@]}" >/dev/null 2>&1 &
 
-    # pane border title: "<cwd> (<branch>)", same format as the shell hook
+    # pane border title: "<cwd> (<branch>)", same format as the shell hook.
+    # this script runs several times a second while claude streams, so only
+    # send the title when it differs from the last one sent for this pane.
     if [ "$cwd" != "-" ] && [ -d "$cwd" ]; then
         branch=$(git -C "$cwd" symbolic-ref --short -q HEAD 2>/dev/null \
             || git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
-        "$HERDR_BIN" pane rename "$HERDR_PANE_ID" \
-            "${cwd/#$HOME/~}${branch:+ ($branch)}" >/dev/null 2>&1 &
+        title="${cwd/#$HOME/~}${branch:+ ($branch)}"
+        stamp="${TMPDIR:-/tmp}/herdr-pane-title-${HERDR_PANE_ID//[^A-Za-z0-9]/_}"
+        if [ "$(cat "$stamp" 2>/dev/null)" != "$title" ]; then
+            printf '%s' "$title" > "$stamp"
+            "$HERDR_BIN" pane rename "$HERDR_PANE_ID" "$title" >/dev/null 2>&1 &
+        fi
     fi
 
-    # refresh this workspace's pane-path list in the spaces rows ($path1..)
-    if [ -x ~/.config/herdr/report-pane-paths.sh ]; then
-        ~/.config/herdr/report-pane-paths.sh "$HERDR_PANE_ID" >/dev/null 2>&1 &
+    # the spaces pane-path rows ($path1.., ~/.config/herdr/report-pane-paths.sh)
+    # are kept current by pane-paths-watch.py, which reacts to the pane
+    # metadata pushed above. just make sure that watcher is alive; it exits
+    # with the herdr server.
+    watcher=~/.config/herdr/pane-paths-watch.py
+    pidfile=~/.config/herdr/pane-paths-watch.pid
+    if [ -f "$watcher" ] && hash python3 2>/dev/null \
+        && ! { [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile" 2>/dev/null)" 2>/dev/null; }; then
+        nohup python3 "$watcher" >>~/.config/herdr/pane-paths-watch.log 2>&1 </dev/null &
     fi
 fi
