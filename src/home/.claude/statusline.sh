@@ -12,6 +12,9 @@
 #             this token because herdr joins separate tokens with " · ".
 #     $five   5h account usage window: bar, percent, reset time
 #     $week   7d account usage window: bar, percent, reset date
+# - keeps this pane's border title at "<cwd> (<git branch>)", the same format
+#   the shell precmd hook in .zshrc/.bashrc uses, so a checkout made from
+#   inside claude code shows up on the pane border too.
 #   the three bar rows pad their labels to 3 columns ("CTX", "5h ", "7d ") so
 #   the bars line up; herdr trims leading spaces, so the pad goes after the
 #   label.
@@ -22,7 +25,7 @@ input=$(cat)
 
 # every field gets a non-empty default: IFS=tab collapses consecutive tabs,
 # so an empty field would shift the ones after it.
-IFS=$'\t' read -r model ctx five five_reset seven seven_reset session_id <<EOF
+IFS=$'\t' read -r model ctx five five_reset seven seven_reset session_id cwd <<EOF
 $(echo "$input" | jq -r '
   [ (.model.display_name // "?"),
     (.context_window.used_percentage // -1 | floor),
@@ -30,7 +33,8 @@ $(echo "$input" | jq -r '
     (.rate_limits.five_hour.resets_at // 0),
     (.rate_limits.seven_day.used_percentage // -1 | floor),
     (.rate_limits.seven_day.resets_at // 0),
-    (.session_id // "-")
+    (.session_id // "-"),
+    (.workspace.current_dir // .cwd // "-")
   ] | @tsv')
 EOF
 
@@ -106,6 +110,14 @@ if [ -n "$HERDR_PANE_ID" ] && [ -x "$HERDR_BIN" ]; then
     fi
     "$HERDR_BIN" pane report-metadata "$HERDR_PANE_ID" \
         --source claude-statusline "${args[@]}" >/dev/null 2>&1 &
+
+    # pane border title: "<cwd> (<branch>)", same format as the shell hook
+    if [ "$cwd" != "-" ] && [ -d "$cwd" ]; then
+        branch=$(git -C "$cwd" symbolic-ref --short -q HEAD 2>/dev/null \
+            || git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
+        "$HERDR_BIN" pane rename "$HERDR_PANE_ID" \
+            "${cwd/#$HOME/~}${branch:+ ($branch)}" >/dev/null 2>&1 &
+    fi
 
     # refresh this workspace's pane-path list in the spaces rows ($path1..)
     if [ -x ~/.config/herdr/report-pane-paths.sh ]; then

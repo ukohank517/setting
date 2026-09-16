@@ -134,16 +134,27 @@ if [ -n "${GHOSTTY_RESOURCES_DIR}" ]; then
     builtin source "${GHOSTTY_RESOURCES_DIR}/shell-integration/zsh/ghostty-integration"
 fi
 
-# herdr: show current directory on this pane's border (like tmux pane-border-format)
-# and refresh the workspace's pane-path list in the sidebar spaces rows
-# (~/.config/herdr/report-pane-paths.sh, $path1.. tokens in herdr config.toml).
+# herdr: show "current directory (git branch)" on this pane's border (like
+# tmux pane-border-format) and refresh the workspace's pane-path list in the
+# sidebar spaces rows (~/.config/herdr/report-pane-paths.sh, $path1.. tokens
+# in herdr config.toml). the branch is re-read on every prompt so a checkout
+# without a cd is picked up too; claude code panes keep the same title format
+# updated from ~/.claude/statusline.sh while claude runs.
 # HERDR_PANE_ID is only set inside herdr panes, so this is a no-op elsewhere.
 if [ -n "${HERDR_PANE_ID}" ]; then
     function __herdr_pane_title() {
-        [ "$__herdr_last_pwd" = "$PWD" ] && return
+        local branch title
+        branch=$(git symbolic-ref --short -q HEAD 2>/dev/null \
+            || git rev-parse --short HEAD 2>/dev/null)
+        title="${PWD/#$HOME/~}${branch:+ ($branch)}"
+        [ "$__herdr_last_title" = "$title" ] && return
+        local pwd_changed=1
+        [ "$__herdr_last_pwd" = "$PWD" ] && pwd_changed=0
+        __herdr_last_title=$title
         __herdr_last_pwd=$PWD
-        (herdr pane rename "$HERDR_PANE_ID" "${PWD/#$HOME/~}" >/dev/null 2>&1 &)
-        ("$HOME/.config/herdr/report-pane-paths.sh" "$HERDR_PANE_ID" "$PWD" >/dev/null 2>&1 &)
+        (herdr pane rename "$HERDR_PANE_ID" "$title" >/dev/null 2>&1 &)
+        [ "$pwd_changed" = 1 ] && \
+            ("$HOME/.config/herdr/report-pane-paths.sh" "$HERDR_PANE_ID" "$PWD" >/dev/null 2>&1 &)
     }
     precmd_functions+=(__herdr_pane_title)
 fi
