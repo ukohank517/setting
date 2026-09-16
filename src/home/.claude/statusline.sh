@@ -5,11 +5,16 @@
 # - mirrors the same data into this pane's rows in herdr's agents sidebar via
 #   pane metadata tokens (see [ui.sidebar.agents.rows_by_agent] in
 #   src/home/.config/herdr/config.toml):
-#     $name  claude code session name (what /list-agents and SendMessage use,
-#            e.g. "setting-42")
-#     $ctx   context window usage of this session
-#     $five  5h account usage window: bar, percent, reset time
-#     $week  7d account usage window: bar, percent, reset date
+#     $name   claude code session name (what /list-agents and SendMessage
+#             use, e.g. "setting-42"); herdr puts its own state text after it
+#     $ctx    context window usage of this session: bar, percent, then the
+#             agent name ("CTX ████░░░░ 17% claude"). the agent name rides in
+#             this token because herdr joins separate tokens with " · ".
+#     $five   5h account usage window: bar, percent, reset time
+#     $week   7d account usage window: bar, percent, reset date
+#   the three bar rows pad their labels to 3 columns ("CTX", "5h ", "7d ") so
+#   the bars line up; herdr trims leading spaces, so the pad goes after the
+#   label.
 #   the 5h/7d limits are account-wide, so every claude pane shows the same
 #   values; they used to sit on the top workspace's spaces rows instead.
 
@@ -85,17 +90,17 @@ if [ -n "$HERDR_PANE_ID" ] && [ -x "$HERDR_BIN" ]; then
         args+=(--clear-token name)
     fi
     if [ "$ctx" -ge 0 ]; then
-        args+=(--token "ctx=CTX ${ctx}%")
+        args+=(--token "ctx=CTX $(bar "$ctx") ${ctx}% claude")
     else
         args+=(--clear-token ctx)
     fi
     if [ -n "$usage5h" ]; then
-        args+=(--token "five=$usage5h")
+        args+=(--token "five=${usage5h/#5h /5h  }")
     else
         args+=(--clear-token five)
     fi
     if [ -n "$usage7d" ]; then
-        args+=(--token "week=$usage7d")
+        args+=(--token "week=${usage7d/#7d /7d  }")
     else
         args+=(--clear-token week)
     fi

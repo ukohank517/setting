@@ -82,36 +82,48 @@ prompt_new_tab_name = true
 # don't auto-copy mouse selections; selection stays until cmd+c copies it.
 copy_on_select = false
 
-# agent panes, 4 rows each, same layout for every agent. the $tokens are
-# pushed per pane via `herdr pane report-metadata`; today only claude code
-# does so (src/home/.claude/statusline.sh). an agent that pushes nothing shows
-# just the state icon on row 1 and "agent · state" on row 2, rows 3-4 collapse.
+# agent panes, 4 rows each. the $tokens are pushed per pane via
+# `herdr pane report-metadata`; today only claude code does so
+# (src/home/.claude/statusline.sh). an agent that pushes nothing shows
+# "● agent · state" on row 1, rows 2-4 collapse.
 #   1  state icon + session name ($name; for claude the name /list-agents and
-#      SendMessage use, e.g. "setting-42")
-#   2  agent name + state text + context usage ($ctx)
+#      SendMessage use, e.g. "setting-42") + herdr's state text
+#   2  context window usage: bar, percent, agent name ($ctx,
+#      "CTX ████░░░░ 17% claude")
 #   3  5h account usage window: bar, percent, reset time ($five)
 #   4  7d account usage window: bar, percent, reset date ($week)
-# the herdr default name row is workspace + tab; both are dropped since the
-# workspace is already in the spaces list and tabs are not in use. until the
-# first update of a session the $tokens are empty, as described above.
+# rows 2-4 share one layout, "LBL ████░░░░ NN%", with labels padded to 3
+# columns by the sender so the bars line up.
 #
-# the 5h/7d limits are account-wide, so all panes of one agent show the same
-# two rows. they were on the top workspace's spaces rows before, but that
-# entry moves when workspaces are reordered and the values are the agent's,
-# not the workspace's.
+# herdr joins the tokens of a row with a fixed " · " (not configurable in
+# 0.8.0/0.9.0). row 1 accepts it so the name and the state can have their
+# own colours; row 2 avoids it by carrying the agent name inside $ctx.
+# "● development2-f3 · working" is 27 columns, exactly the row width; a
+# longer session name gets both tokens truncated with "…".
 #
-# state_text spells the state out because state_icon alone is colour-only for
-# most of it: blocked, working and done all render the same filled dot and
-# differ only in red/yellow/teal (state_dot() in herdr's src/ui/status.rs).
+# the 5h/7d limits are account-wide, so all claude panes show the same two
+# rows. they were on the top workspace's spaces rows before, but that entry
+# moves when workspaces are reordered and the values are claude's, not the
+# workspace's.
 [ui.sidebar.agents]
 rows = [
+  ["state_icon", "agent", "state_text"],
+  [{ token = "$ctx", dim = true }],
+  [{ token = "$five", dim = true }],
+  [{ token = "$week", dim = true }],
+]
+
+[ui.sidebar.agents.rows_by_agent]
+claude = [
   # custom tokens render dim grey and, unlike the workspace token, get no
   # focus-aware colour (herdr 0.8.0/0.9.0 config cannot express "when
   # focused"). so mimic the unfocused workspace look: tokyo-night subtext0,
-  # bold, not dimmed. the focused entry is marked by the surface_dim row fill
-  # from [theme.custom] instead.
-  ["state_icon", { token = "$name", fg = "#a9b1d6", bold = true, dim = false }],
-  ["agent", "state_text", { token = "$ctx", dim = true }],
+  # bold, not dimmed. state_text keeps herdr's state colour (working yellow,
+  # blocked red, done teal, idle green) and is dimmed when unfocused. the
+  # focused entry is also marked by the surface_dim row fill from
+  # [theme.custom].
+  ["state_icon", { token = "$name", fg = "#a9b1d6", bold = true, dim = false }, "state_text"],
+  [{ token = "$ctx", dim = true }],
   [{ token = "$five", dim = true }],
   [{ token = "$week", dim = true }],
 ]
