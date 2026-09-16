@@ -1,22 +1,47 @@
 #!/bin/bash
 
 # Claude Code statusLine script.
-# - prints a status line inside claude code (model | context % | usage limits)
-# - mirrors account usage limits (/usage の 5h・7d ウィンドウ) into herdr's
-#   sidebar spaces rows via workspace metadata ($usage / $week tokens,
-#   see [ui.sidebar.spaces] in src/home/.config/herdr/config.toml).
-#   account-wide values, so they are pinned to the top workspace only.
+# - prints a status line inside claude code
+#   ("@session(model) | context % | usage limits", e.g. "@setting-42(Fable) | CTX 4% | ...";
+#   the session name leads because it is what tells panes apart, the model
+#   rarely changes. it falls back to just the model when no name resolves)
+# - mirrors the same data into this pane's rows in herdr's agents sidebar via
+#   pane metadata tokens (see [ui.sidebar.agents.rows_by_agent] in
+#   src/home/.config/herdr/config.toml):
+#     $session  claude code session name (what /list-agents and SendMessage
+#               use, e.g. "setting-42"). not shown directly: pane-paths-watch.py
+#               copies it into $name (pane in the focused workspace, bright)
+#               or $name_other (any other workspace, dim), next to a state
+#               token it colours the same way, so agents of the selected
+#               workspace stand out from the rest.
+#     $ctx    context window usage of this session: bar, percent, then the
+#             agent name ("CTX ████░░░░ 17% claude"). the agent name rides in
+#             this token because herdr joins separate tokens with " · ".
+#     $five   5h account usage window: bar, percent, reset time
+#     $week   7d account usage window: bar, percent, reset date
+# - keeps this pane's border title at "<cwd> (<git branch>)", the same format
+#   the shell precmd hook in .zshrc/.bashrc uses, so a checkout made from
+#   inside claude code shows up on the pane border too.
+#   the three bar rows pad their labels to 3 columns ("CTX", "5h ", "7d ") so
+#   the bars line up; herdr trims leading spaces, so the pad goes after the
+#   label.
+#   the 5h/7d limits are account-wide, so every claude pane shows the same
+#   values; they used to sit on the top workspace's spaces rows instead.
 
 input=$(cat)
 
-IFS=$'\t' read -r model ctx five five_reset seven seven_reset <<EOF
+# every field gets a non-empty default: IFS=tab collapses consecutive tabs,
+# so an empty field would shift the ones after it.
+IFS=$'\t' read -r model ctx five five_reset seven seven_reset session_id cwd <<EOF
 $(echo "$input" | jq -r '
   [ (.model.display_name // "?"),
     (.context_window.used_percentage // -1 | floor),
     (.rate_limits.five_hour.used_percentage // -1 | floor),
     (.rate_limits.five_hour.resets_at // 0),
     (.rate_limits.seven_day.used_percentage // -1 | floor),
-    (.rate_limits.seven_day.resets_at // 0)
+    (.rate_limits.seven_day.resets_at // 0),
+    (.session_id // "-"),
+    (.workspace.current_dir // .cwd // "-")
   ] | @tsv')
 EOF
 
@@ -43,7 +68,26 @@ if [ "$seven" -ge 0 ]; then
     [ "$seven_reset" -gt 0 ] && usage7d="$usage7d ↻$(date -r "$seven_reset" '+%m/%d')"
 fi
 
-line="$model"
+# claude code's session name (what /list-agents shows). claude writes one
+# ~/.claude/sessions/<pid>.json per live session with sessionId and name;
+# match on session_id, falling back to our parent pid (the claude process).
+session_name=""
+if hash jq 2>/dev/null; then
+    if [ "$session_id" != "-" ]; then
+        session_name=$(jq -r --arg sid "$session_id" \
+            'select(.sessionId == $sid) | .name // empty' \
+            ~/.claude/sessions/*.json 2>/dev/null | head -n1)
+    fi
+    if [ -z "$session_name" ] && [ -f ~/.claude/sessions/"$PPID".json ]; then
+        session_name=$(jq -r '.name // empty' ~/.claude/sessions/"$PPID".json 2>/dev/null)
+    fi
+fi
+
+if [ -n "$session_name" ]; then
+    line="@$session_name($model)"
+else
+    line="$model"
+fi
 [ "$ctx" -ge 0 ] && line="$line | CTX ${ctx}%"
 [ -n "$usage5h" ] && line="$line | $usage5h"
 [ -n "$usage7d" ] && line="$line | $usage7d"
@@ -51,33 +95,55 @@ echo "$line"
 
 HERDR_BIN=$(command -v herdr || echo /opt/homebrew/bin/herdr)
 
-# per-pane row in herdr's agents sidebar: context usage + 5h reset
+# per-pane rows in herdr's agents sidebar (all pushed under one source, so
+# a value that disappears from the input is cleared rather than left stale).
 if [ -n "$HERDR_PANE_ID" ] && [ -x "$HERDR_BIN" ]; then
     args=()
-    [ "$ctx" -ge 0 ] && args+=(--token "usage=CTX ${ctx}%")
-    if [ "$five_reset" -gt 0 ]; then
-        args+=(--token "reset=↻$(date -r "$five_reset" '+%m/%d %H:%M')")
+    if [ -n "$session_name" ]; then
+        args+=(--token "session=$session_name")
+    else
+        args+=(--clear-token session)
     fi
-    if [ ${#args[@]} -gt 0 ]; then
-        "$HERDR_BIN" pane report-metadata "$HERDR_PANE_ID" \
-            --source claude-statusline "${args[@]}" >/dev/null 2>&1 &
+    if [ "$ctx" -ge 0 ]; then
+        args+=(--token "ctx=CTX $(bar "$ctx") ${ctx}% claude")
+    else
+        args+=(--clear-token ctx)
     fi
-fi
+    if [ -n "$usage5h" ]; then
+        args+=(--token "five=${usage5h/#5h /5h  }")
+    else
+        args+=(--clear-token five)
+    fi
+    if [ -n "$usage7d" ]; then
+        args+=(--token "week=${usage7d/#7d /7d  }")
+    else
+        args+=(--clear-token week)
+    fi
+    "$HERDR_BIN" pane report-metadata "$HERDR_PANE_ID" \
+        --source claude-statusline "${args[@]}" >/dev/null 2>&1 &
 
-# spaces rows in herdr's sidebar: account-wide usage limits.
-# the values are global to the account, so they are pinned to the sidebar's
-# top workspace instead of the one this session runs in — one row, no
-# duplicates, and unaffected by panes moving between workspaces.
-if [ "$HERDR_ENV" = 1 ] && [ -x "$HERDR_BIN" ]; then
-    args=()
-    [ -n "$usage5h" ] && args+=(--token "usage=$usage5h")
-    [ -n "$usage7d" ] && args+=(--token "week=$usage7d")
-    if [ ${#args[@]} -gt 0 ]; then
-        (
-            top_ws=$("$HERDR_BIN" workspace list 2>/dev/null \
-                | jq -r '.result.workspaces[0].workspace_id // empty')
-            [ -n "$top_ws" ] && "$HERDR_BIN" workspace report-metadata "$top_ws" \
-                --source claude-statusline "${args[@]}"
-        ) >/dev/null 2>&1 &
+    # pane border title: "<cwd> (<branch>)", same format as the shell hook.
+    # this script runs several times a second while claude streams, so only
+    # send the title when it differs from the last one sent for this pane.
+    if [ "$cwd" != "-" ] && [ -d "$cwd" ]; then
+        branch=$(git -C "$cwd" symbolic-ref --short -q HEAD 2>/dev/null \
+            || git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
+        title="${cwd/#$HOME/~}${branch:+ ($branch)}"
+        stamp="${TMPDIR:-/tmp}/herdr-pane-title-${HERDR_PANE_ID//[^A-Za-z0-9]/_}"
+        if [ "$(cat "$stamp" 2>/dev/null)" != "$title" ]; then
+            printf '%s' "$title" > "$stamp"
+            "$HERDR_BIN" pane rename "$HERDR_PANE_ID" "$title" >/dev/null 2>&1 &
+        fi
+    fi
+
+    # the spaces pane-path rows ($path1.., ~/.config/herdr/report-pane-paths.sh)
+    # are kept current by pane-paths-watch.py, which reacts to the pane
+    # metadata pushed above. just make sure that watcher is alive; it exits
+    # with the herdr server.
+    watcher=~/.config/herdr/pane-paths-watch.py
+    pidfile=~/.config/herdr/pane-paths-watch.pid
+    if [ -f "$watcher" ] && hash python3 2>/dev/null \
+        && ! { [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile" 2>/dev/null)" 2>/dev/null; }; then
+        nohup python3 "$watcher" >>~/.config/herdr/pane-paths-watch.log 2>&1 </dev/null &
     fi
 fi

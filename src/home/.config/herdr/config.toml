@@ -8,6 +8,16 @@
 #           one-dark, solarized, kanagawa, rose-pine, vesper
 name = "tokyo-night"
 
+[theme.custom]
+# active agent/space rows are filled with surface_dim, but tokyo-night defines
+# surface_dim == panel_bg (#1a1b26), so the fill is invisible and only the
+# workspace token's brighter text ever marked the focused entry. the agents
+# name row here uses $name instead (custom tokens get no focus styling in
+# herdr 0.8.0, see resolved_token_spans() in src/ui/sidebar.rs), so give the
+# fill a visible colour: tokyo-night's bg_highlight. also used for dividers,
+# separators and the scrollbar track, which become slightly more visible.
+surface_dim = "#292e42"
+
 [keys]
 # prefix key. ctrl+g is a plain terminal keystroke, so this works in any
 # terminal (ghostty, Terminal.app, ...) with no host-side setup.
@@ -72,33 +82,88 @@ prompt_new_tab_name = true
 # don't auto-copy mouse selections; selection stays until cmd+c copies it.
 copy_on_select = false
 
-# claude panes get an extra row with context usage and 5h reset time.
-# values are pushed by claude code's statusLine script (src/home/.claude/statusline.sh)
-# via `herdr pane report-metadata --token usage=... --token reset=...`.
+# agent panes, 4 rows each. the $tokens are pushed per pane via
+# `herdr pane report-metadata`; today only claude code does so
+# (src/home/.claude/statusline.sh). an agent that pushes nothing shows
+# "● agent · state" on row 1, rows 2-4 collapse.
+#   1  state icon + session name ($name; for claude the name /list-agents and
+#      SendMessage use, e.g. "setting-42") + herdr's state text
+#   2  context window usage: bar, percent, agent name ($ctx,
+#      "CTX ████░░░░ 17% claude")
+#   3  5h account usage window: bar, percent, reset time ($five)
+#   4  7d account usage window: bar, percent, reset date ($week)
+# rows 2-4 share one layout, "LBL ████░░░░ NN%", with labels padded to 3
+# columns by the sender so the bars line up.
 #
-# state_text spells the state out because state_icon alone is colour-only for
-# most of it: blocked, working and done all render the same filled dot and
-# differ only in red/yellow/teal (state_dot() in herdr's src/ui/status.rs).
-# it rides on the agent row -- that row holds just "claude", so this costs no
-# extra height and keeps the name row clear of the 26-column sidebar limit.
-[ui.sidebar.agents.rows_by_agent]
-claude = [
-  ["state_icon", "workspace", "tab"],
-  ["agent", "state_text"],
-  [{ token = "$usage", dim = true }, { token = "$reset", dim = true }],
+# herdr joins the tokens of a row with a fixed " · " (not configurable in
+# 0.8.0/0.9.0). row 1 accepts it so the name and the state can have their
+# own colours; row 2 avoids it by carrying the agent name inside $ctx.
+# "● development2-f3 · working" is 27 columns, exactly the row width; a
+# longer session name gets both tokens truncated with "…".
+#
+# the 5h/7d limits are account-wide, so all claude panes show the same two
+# rows. they were on the top workspace's spaces rows before, but that entry
+# moves when workspaces are reordered and the values are claude's, not the
+# workspace's.
+[ui.sidebar.agents]
+rows = [
+  ["state_icon", "agent", "state_text"],
+  [{ token = "$ctx", dim = true }],
+  [{ token = "$five", dim = true }],
+  [{ token = "$week", dim = true }],
 ]
 
-# spaces rows show claude's account usage limits (/usage の 5h・7d ウィンドウ).
-# values are pushed by claude code's statusLine script (src/home/.claude/statusline.sh)
-# via `herdr workspace report-metadata --token usage=... --token week=...`.
-# the account usage rows ($usage/$week) only render under the top workspace:
-# statusline.sh reports them there and empty token rows collapse. keep them
-# after the name row — a row placed first would drag the entry's remaining
-# rows (including the workspace name) one indent level right.
+# claude row 1 is built from slots filled by pane-paths-watch.py so that agents
+# in the focused workspace and agents elsewhere can look different (a token
+# has one fixed style; herdr's own state_text cannot be restyled per pane):
+#   focused workspace : $name (tokyo-night subtext0, bold) + one of
+#                       $st_working / $st_blocked / $st_idle / $st_done in
+#                       herdr's state colours (yellow / red / green / teal)
+#   other workspaces  : $name_other + $st_other, both dim like the usage rows
+# only one slot of each pair is set, the empty ones are elided, so the row
+# still reads "● setting-42 · working". the state icon stays herdr's own and
+# keeps its colour everywhere. the focused entry is also marked by the
+# surface_dim row fill from [theme.custom].
+[ui.sidebar.agents.rows_by_agent]
+claude = [
+  [
+    "state_icon",
+    { token = "$name", fg = "#a9b1d6", bold = true, dim = false },
+    { token = "$name_other", dim = true },
+    { token = "$st_working", fg = "#e0af68", dim = false },
+    { token = "$st_blocked", fg = "#f7768e", dim = false },
+    { token = "$st_idle", fg = "#9ece6a", dim = false },
+    { token = "$st_done", fg = "#1abc9c", dim = false },
+    { token = "$st_other", dim = true },
+  ],
+  [{ token = "$ctx", dim = true }],
+  [{ token = "$five", dim = true }],
+  [{ token = "$week", dim = true }],
+]
+
+# spaces rows: workspace name, then the pane directories. herdr's branch /
+# git_status row is left out: the branch is shown on each pane's border title
+# instead ("~/path (branch)", set by the shell precmd hook and statusline.sh),
+# which is per pane rather than per workspace.
+#
+# $path1..$path6 / $focus1..$focus6 list every pane in the workspace, one row
+# each in pane order: a state mark (● agent working, ◆ blocked, ○ idle,
+# · plain shell) and the pane's cwd with the ~/workspace/ prefix dropped.
+# row N holds either $pathN or $focusN: the globally focused pane is sent as
+# $focusN (bright, bold), all others as $pathN (dim); the empty one is
+# elided, so no separator appears. pushed by
+# ~/.config/herdr/report-pane-paths.sh from the shell precmd hook in
+# .zshrc/.bashrc, from statusline.sh, and from pane-paths-watch.py, which
+# follows herdr's focus / pane / agent-state events so the marks and the
+# highlight move at once. unused slots are cleared so the rows collapse.
+# MAX in the script must match the number of rows here.
 [ui.sidebar.spaces]
 rows = [
   ["state_icon", "workspace"],
-  ["branch", "git_status"],
-  [{ token = "$usage", dim = true }],
-  [{ token = "$week", dim = true }],
+  [{ token = "$path1", dim = true }, { token = "$focus1", fg = "#c0caf5", bold = true, dim = false }],
+  [{ token = "$path2", dim = true }, { token = "$focus2", fg = "#c0caf5", bold = true, dim = false }],
+  [{ token = "$path3", dim = true }, { token = "$focus3", fg = "#c0caf5", bold = true, dim = false }],
+  [{ token = "$path4", dim = true }, { token = "$focus4", fg = "#c0caf5", bold = true, dim = false }],
+  [{ token = "$path5", dim = true }, { token = "$focus5", fg = "#c0caf5", bold = true, dim = false }],
+  [{ token = "$path6", dim = true }, { token = "$focus6", fg = "#c0caf5", bold = true, dim = false }],
 ]
