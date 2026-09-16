@@ -82,40 +82,41 @@ prompt_new_tab_name = true
 # don't auto-copy mouse selections; selection stays until cmd+c copies it.
 copy_on_select = false
 
-# claude panes: name row = claude code's session name ($name, the same name
-# /list-agents and SendMessage use, e.g. "setting-42"), then agent + state,
-# then context usage and 5h reset time. all $tokens are pushed by claude
-# code's statusLine script (src/home/.claude/statusline.sh) via
-# `herdr pane report-metadata --token name=... --token usage=... --token reset=...`.
-# the herdr default name row is workspace + tab; both are dropped here since
-# the workspace is already in the spaces list and tabs are not in use.
-# until the first statusline update of a session $name is empty, so the row
-# shows just the state icon for a moment.
+# agent panes, 4 rows each, same layout for every agent. the $tokens are
+# pushed per pane via `herdr pane report-metadata`; today only claude code
+# does so (src/home/.claude/statusline.sh). an agent that pushes nothing shows
+# just the state icon on row 1 and "agent · state" on row 2, rows 3-4 collapse.
+#   1  state icon + session name ($name; for claude the name /list-agents and
+#      SendMessage use, e.g. "setting-42")
+#   2  agent name + state text + context usage ($ctx)
+#   3  5h account usage window: bar, percent, reset time ($five)
+#   4  7d account usage window: bar, percent, reset date ($week)
+# the herdr default name row is workspace + tab; both are dropped since the
+# workspace is already in the spaces list and tabs are not in use. until the
+# first update of a session the $tokens are empty, as described above.
+#
+# the 5h/7d limits are account-wide, so all panes of one agent show the same
+# two rows. they were on the top workspace's spaces rows before, but that
+# entry moves when workspaces are reordered and the values are the agent's,
+# not the workspace's.
 #
 # state_text spells the state out because state_icon alone is colour-only for
 # most of it: blocked, working and done all render the same filled dot and
 # differ only in red/yellow/teal (state_dot() in herdr's src/ui/status.rs).
-# it rides on the agent row -- that row holds just "claude", so this costs no
-# extra height and keeps the name row clear of the 26-column sidebar limit.
-[ui.sidebar.agents.rows_by_agent]
-claude = [
+[ui.sidebar.agents]
+rows = [
   # custom tokens render dim grey and, unlike the workspace token, get no
   # focus-aware colour (herdr 0.8.0/0.9.0 config cannot express "when
   # focused"). so mimic the unfocused workspace look: tokyo-night subtext0,
   # bold, not dimmed. the focused entry is marked by the surface_dim row fill
   # from [theme.custom] instead.
   ["state_icon", { token = "$name", fg = "#a9b1d6", bold = true, dim = false }],
-  ["agent", "state_text"],
-  [{ token = "$usage", dim = true }, { token = "$reset", dim = true }],
+  ["agent", "state_text", { token = "$ctx", dim = true }],
+  [{ token = "$five", dim = true }],
+  [{ token = "$week", dim = true }],
 ]
 
-# spaces rows show claude's account usage limits (/usage の 5h・7d ウィンドウ).
-# values are pushed by claude code's statusLine script (src/home/.claude/statusline.sh)
-# via `herdr workspace report-metadata --token usage=... --token week=...`.
-# the account usage rows ($usage/$week) only render under the top workspace:
-# statusline.sh reports them there and empty token rows collapse. keep them
-# after the name row — a row placed first would drag the entry's remaining
-# rows (including the workspace name) one indent level right.
+# spaces rows: workspace name, git branch/status, then the pane directories.
 #
 # $path1..$path6 list the cwd of every pane in the workspace (deduped, pane
 # order, ~/workspace/ prefix dropped). pushed by
@@ -132,6 +133,4 @@ rows = [
   [{ token = "$path4", dim = true }],
   [{ token = "$path5", dim = true }],
   [{ token = "$path6", dim = true }],
-  [{ token = "$usage", dim = true }],
-  [{ token = "$week", dim = true }],
 ]

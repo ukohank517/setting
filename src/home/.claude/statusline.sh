@@ -2,13 +2,16 @@
 
 # Claude Code statusLine script.
 # - prints a status line inside claude code (model | context % | usage limits)
-# - mirrors account usage limits (/usage の 5h・7d ウィンドウ) into herdr's
-#   sidebar spaces rows via workspace metadata ($usage / $week tokens,
-#   see [ui.sidebar.spaces] in src/home/.config/herdr/config.toml).
-#   account-wide values, so they are pinned to the top workspace only.
-# - mirrors this session's claude code session name (the one /list-agents and
-#   SendMessage use, e.g. "setting-42") into herdr's agents rows as a $name
-#   token, so each claude pane in the sidebar is labelled by session name.
+# - mirrors the same data into this pane's rows in herdr's agents sidebar via
+#   pane metadata tokens (see [ui.sidebar.agents.rows_by_agent] in
+#   src/home/.config/herdr/config.toml):
+#     $name  claude code session name (what /list-agents and SendMessage use,
+#            e.g. "setting-42")
+#     $ctx   context window usage of this session
+#     $five  5h account usage window: bar, percent, reset time
+#     $week  7d account usage window: bar, percent, reset date
+#   the 5h/7d limits are account-wide, so every claude pane shows the same
+#   values; they used to sit on the top workspace's spaces rows instead.
 
 input=$(cat)
 
@@ -72,38 +75,35 @@ if [ -n "$HERDR_PANE_ID" ] && hash jq 2>/dev/null; then
     fi
 fi
 
-# per-pane rows in herdr's agents sidebar: session name, context usage + 5h reset
+# per-pane rows in herdr's agents sidebar (all pushed under one source, so
+# a value that disappears from the input is cleared rather than left stale).
 if [ -n "$HERDR_PANE_ID" ] && [ -x "$HERDR_BIN" ]; then
     args=()
-    [ -n "$session_name" ] && args+=(--token "name=$session_name")
-    [ "$ctx" -ge 0 ] && args+=(--token "usage=CTX ${ctx}%")
-    if [ "$five_reset" -gt 0 ]; then
-        args+=(--token "reset=↻$(date -r "$five_reset" '+%m/%d %H:%M')")
+    if [ -n "$session_name" ]; then
+        args+=(--token "name=$session_name")
+    else
+        args+=(--clear-token name)
     fi
-    if [ ${#args[@]} -gt 0 ]; then
-        "$HERDR_BIN" pane report-metadata "$HERDR_PANE_ID" \
-            --source claude-statusline "${args[@]}" >/dev/null 2>&1 &
+    if [ "$ctx" -ge 0 ]; then
+        args+=(--token "ctx=CTX ${ctx}%")
+    else
+        args+=(--clear-token ctx)
     fi
+    if [ -n "$usage5h" ]; then
+        args+=(--token "five=$usage5h")
+    else
+        args+=(--clear-token five)
+    fi
+    if [ -n "$usage7d" ]; then
+        args+=(--token "week=$usage7d")
+    else
+        args+=(--clear-token week)
+    fi
+    "$HERDR_BIN" pane report-metadata "$HERDR_PANE_ID" \
+        --source claude-statusline "${args[@]}" >/dev/null 2>&1 &
+
     # refresh this workspace's pane-path list in the spaces rows ($path1..)
     if [ -x ~/.config/herdr/report-pane-paths.sh ]; then
         ~/.config/herdr/report-pane-paths.sh "$HERDR_PANE_ID" >/dev/null 2>&1 &
-    fi
-fi
-
-# spaces rows in herdr's sidebar: account-wide usage limits.
-# the values are global to the account, so they are pinned to the sidebar's
-# top workspace instead of the one this session runs in — one row, no
-# duplicates, and unaffected by panes moving between workspaces.
-if [ "$HERDR_ENV" = 1 ] && [ -x "$HERDR_BIN" ]; then
-    args=()
-    [ -n "$usage5h" ] && args+=(--token "usage=$usage5h")
-    [ -n "$usage7d" ] && args+=(--token "week=$usage7d")
-    if [ ${#args[@]} -gt 0 ]; then
-        (
-            top_ws=$("$HERDR_BIN" workspace list 2>/dev/null \
-                | jq -r '.result.workspaces[0].workspace_id // empty')
-            [ -n "$top_ws" ] && "$HERDR_BIN" workspace report-metadata "$top_ws" \
-                --source claude-statusline "${args[@]}"
-        ) >/dev/null 2>&1 &
     fi
 fi
