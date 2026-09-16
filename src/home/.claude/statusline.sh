@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Claude Code statusLine script.
-# - prints a status line inside claude code (model | context % | usage limits)
+# - prints a status line inside claude code
+#   ("@session(model) | context % | usage limits", e.g. "@setting-42(Fable) | CTX 4% | ...";
+#   the session name leads because it is what tells panes apart, the model
+#   rarely changes. it falls back to just the model when no name resolves)
 # - mirrors the same data into this pane's rows in herdr's agents sidebar via
 #   pane metadata tokens (see [ui.sidebar.agents.rows_by_agent] in
 #   src/home/.config/herdr/config.toml):
@@ -65,19 +68,11 @@ if [ "$seven" -ge 0 ]; then
     [ "$seven_reset" -gt 0 ] && usage7d="$usage7d ↻$(date -r "$seven_reset" '+%m/%d')"
 fi
 
-line="$model"
-[ "$ctx" -ge 0 ] && line="$line | CTX ${ctx}%"
-[ -n "$usage5h" ] && line="$line | $usage5h"
-[ -n "$usage7d" ] && line="$line | $usage7d"
-echo "$line"
-
-HERDR_BIN=$(command -v herdr || echo /opt/homebrew/bin/herdr)
-
 # claude code's session name (what /list-agents shows). claude writes one
 # ~/.claude/sessions/<pid>.json per live session with sessionId and name;
 # match on session_id, falling back to our parent pid (the claude process).
 session_name=""
-if [ -n "$HERDR_PANE_ID" ] && hash jq 2>/dev/null; then
+if hash jq 2>/dev/null; then
     if [ "$session_id" != "-" ]; then
         session_name=$(jq -r --arg sid "$session_id" \
             'select(.sessionId == $sid) | .name // empty' \
@@ -87,6 +82,18 @@ if [ -n "$HERDR_PANE_ID" ] && hash jq 2>/dev/null; then
         session_name=$(jq -r '.name // empty' ~/.claude/sessions/"$PPID".json 2>/dev/null)
     fi
 fi
+
+if [ -n "$session_name" ]; then
+    line="@$session_name($model)"
+else
+    line="$model"
+fi
+[ "$ctx" -ge 0 ] && line="$line | CTX ${ctx}%"
+[ -n "$usage5h" ] && line="$line | $usage5h"
+[ -n "$usage7d" ] && line="$line | $usage7d"
+echo "$line"
+
+HERDR_BIN=$(command -v herdr || echo /opt/homebrew/bin/herdr)
 
 # per-pane rows in herdr's agents sidebar (all pushed under one source, so
 # a value that disappears from the input is cleared rather than left stale).
