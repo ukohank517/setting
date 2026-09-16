@@ -128,7 +128,10 @@ claude = [
   [{ token = "$week", dim = true }],
 ]
 
-# spaces rows: workspace name, git branch/status, then the pane directories.
+# spaces rows: workspace name, then the pane directories. herdr's branch /
+# git_status row is left out: the branch is shown on each pane's border title
+# instead ("~/path (branch)", set by the shell precmd hook and statusline.sh),
+# which is per pane rather than per workspace.
 #
 # $path1..$path6 list the cwd of every pane in the workspace (deduped, pane
 # order, ~/workspace/ prefix dropped). pushed by
@@ -138,7 +141,6 @@ claude = [
 [ui.sidebar.spaces]
 rows = [
   ["state_icon", "workspace"],
-  ["branch", "git_status"],
   [{ token = "$path1", dim = true }],
   [{ token = "$path2", dim = true }],
   [{ token = "$path3", dim = true }],
