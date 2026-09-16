@@ -116,10 +116,22 @@ claude = [
 # statusline.sh reports them there and empty token rows collapse. keep them
 # after the name row — a row placed first would drag the entry's remaining
 # rows (including the workspace name) one indent level right.
+#
+# $path1..$path6 list the cwd of every pane in the workspace (deduped, pane
+# order, ~/workspace/ prefix dropped). pushed by
+# ~/.config/herdr/report-pane-paths.sh from the shell precmd hook in
+# .zshrc/.bashrc and from statusline.sh; unused slots are cleared so the rows
+# collapse. MAX in that script must match the number of rows here.
 [ui.sidebar.spaces]
 rows = [
   ["state_icon", "workspace"],
   ["branch", "git_status"],
+  [{ token = "$path1", dim = true }],
+  [{ token = "$path2", dim = true }],
+  [{ token = "$path3", dim = true }],
+  [{ token = "$path4", dim = true }],
+  [{ token = "$path5", dim = true }],
+  [{ token = "$path6", dim = true }],
   [{ token = "$usage", dim = true }],
   [{ token = "$week", dim = true }],
 ]

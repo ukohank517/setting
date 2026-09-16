@@ -84,6 +84,10 @@ if [ -n "$HERDR_PANE_ID" ] && [ -x "$HERDR_BIN" ]; then
         "$HERDR_BIN" pane report-metadata "$HERDR_PANE_ID" \
             --source claude-statusline "${args[@]}" >/dev/null 2>&1 &
     fi
+    # refresh this workspace's pane-path list in the spaces rows ($path1..)
+    if [ -x ~/.config/herdr/report-pane-paths.sh ]; then
+        ~/.config/herdr/report-pane-paths.sh "$HERDR_PANE_ID" >/dev/null 2>&1 &
+    fi
 fi
 
 # spaces rows in herdr's sidebar: account-wide usage limits.
