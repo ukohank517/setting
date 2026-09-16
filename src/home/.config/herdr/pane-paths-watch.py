@@ -7,6 +7,15 @@ moves, agent state changes and pane open/close happen without either, so
 this watcher subscribes to herdr's newline-delimited JSON socket API and
 re-runs the script for the workspaces whose rows would change.
 
+it also colours the agents rows by workspace membership. a sidebar token
+has one fixed style, so each claude pane's name row is fed through slots
+(see [ui.sidebar.agents.rows_by_agent] in config.toml): the session name
+statusline.sh reports as $session is copied into $name (pane in the focused
+workspace, bright) or $name_other (dim); herdr's state goes into
+$st_working / $st_blocked / $st_idle / $st_done (state colours, focused
+workspace) or $st_other (dim). only one slot of each pair is set, the rest
+are cleared, so the row still reads "● setting-42 · working".
+
 events are only a trigger, never trusted as a diff: herdr emits pane_focused /
 workspace_focused events on every workspace metadata update (including the
 ones this pipeline sends), which made a naive "refresh on focus event"
@@ -31,8 +40,9 @@ HERDR_DIR = os.path.expanduser("~/.config/herdr")
 SOCK = os.path.join(HERDR_DIR, "herdr.sock")
 PIDFILE = os.path.join(HERDR_DIR, "pane-paths-watch.pid")
 SCRIPT = os.path.join(HERDR_DIR, "report-pane-paths.sh")
-DEBOUNCE = 0.2   # seconds of quiet before looking at the snapshot
-MIN_GAP = 0.5    # seconds between two refresh passes, whatever happens
+DEBOUNCE = 0.05  # seconds of quiet before looking at the snapshot
+MIN_GAP = 0.15   # seconds between two refresh passes, whatever happens
+FOCUS_EVENTS = {"pane_focused", "workspace_focused"}  # refreshed without debounce
 
 SUBSCRIPTIONS = [
     "pane.focused", "workspace.focused", "pane.created", "pane.closed",
@@ -54,15 +64,60 @@ def already_running():
         return False
 
 
-def fingerprints():
-    """{workspace_id: fingerprint} from one snapshot; None if herdr is gone."""
-    try:
-        out = subprocess.run(["herdr", "api", "snapshot"], capture_output=True,
-                             text=True, timeout=5).stdout
-        snap = json.loads(out)["result"]["snapshot"]
-    except Exception as e:  # noqa: BLE001
-        log(f"snapshot failed: {e}")
-        return None
+STATE_SLOTS = ("st_working", "st_blocked", "st_idle", "st_done", "st_other")
+NAME_SLOTS = ("name", "name_other")
+
+
+class Client:
+    """one request/response connection to the herdr socket (newline JSON).
+
+    spawning the herdr CLI costs ~50 ms per call; a request over an open
+    socket takes a few ms, which is what keeps the sidebar refresh snappy."""
+
+    def __init__(self):
+        self.sock = None
+        self.buf = b""
+        self.n = 0
+
+    def request(self, method, params):
+        for attempt in (1, 2):
+            try:
+                if self.sock is None:
+                    self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    self.sock.settimeout(5)
+                    self.sock.connect(SOCK)
+                    self.buf = b""
+                self.n += 1
+                msg = {"id": f"pane-paths-watch:{self.n}", "method": method, "params": params}
+                self.sock.sendall((json.dumps(msg) + "\n").encode())
+                while b"\n" not in self.buf:
+                    chunk = self.sock.recv(1 << 20)
+                    if not chunk:
+                        raise OSError("socket closed")
+                    self.buf += chunk
+                line, self.buf = self.buf.split(b"\n", 1)
+                reply = json.loads(line)
+                if "error" in reply:
+                    log(f"{method} failed: {reply['error']}")
+                    return None
+                return reply.get("result")
+            except (OSError, ValueError) as e:
+                self.sock = None
+                if attempt == 2:
+                    log(f"{method} failed: {e}")
+                    return None
+
+
+client = Client()
+
+
+def snapshot():
+    result = client.request("session.snapshot", {})
+    return result.get("snapshot") if result else None
+
+
+def fingerprints(snap):
+    """{workspace_id: fingerprint} of what the spaces rows depend on."""
     focused = snap.get("focused_pane_id")
     per_ws = {w["workspace_id"]: [] for w in snap.get("workspaces", [])}
     for p in snap.get("panes", []):
@@ -72,6 +127,38 @@ def fingerprints():
             p["pane_id"] == focused,
         ))
     return {ws: tuple(rows) for ws, rows in per_ws.items()}
+
+
+def agent_rows(snap):
+    """{pane_id: (wanted_tokens, current_tokens)} for panes reporting a session.
+
+    wanted maps every slot to its value or None (= cleared); current is what
+    the snapshot shows for those slots, so a comparison catches tokens that
+    went missing as well as ones that should change."""
+    focused_ws = snap.get("focused_workspace_id")
+    rows = {}
+    for a in snap.get("agents", []):
+        tokens = a.get("tokens") or {}
+        session = tokens.get("session")
+        if not session:
+            continue
+        status = a.get("agent_status") or "unknown"
+        if status == "unknown":
+            status = "idle"   # herdr's state_label() renders unknown as idle
+        same = a.get("workspace_id") == focused_ws
+        name_slot = "name" if same else "name_other"
+        state_slot = f"st_{status}" if same else "st_other"
+        wanted = {slot: (session if slot == name_slot else None) for slot in NAME_SLOTS}
+        wanted.update({slot: (status if slot == state_slot else None) for slot in STATE_SLOTS})
+        current = {slot: tokens.get(slot) for slot in NAME_SLOTS + STATE_SLOTS}
+        rows[a["pane_id"]] = (wanted, current)
+    return rows
+
+
+def push_agent_row(pane_id, tokens):
+    # a null token value clears that token
+    client.request("pane.report_metadata",
+                   {"pane_id": pane_id, "source": "pane-view", "tokens": tokens})
 
 
 def main():
@@ -92,8 +179,9 @@ def main():
     log("subscribed")
 
     lock = threading.Lock()
+    work = threading.Lock()   # one refresh at a time (shared request socket)
     timer = [None]
-    last = [fingerprints() or {}]
+    last = [{}]        # workspace fingerprints
     last_pass = [0.0]
 
     def refresh():
@@ -104,16 +192,30 @@ def main():
             schedule(MIN_GAP - (now - last_pass[0]))
             return
         last_pass[0] = now
-        current = fingerprints()
-        if current is None:
+        with work:
+            refresh_locked()
+
+    def refresh_locked():
+        t0 = time.monotonic()
+        snap = snapshot()
+        if snap is None:
             return
+        current = fingerprints(snap)
         changed = [ws for ws, fp in current.items() if last[0].get(ws) != fp]
         last[0] = current
         for ws in changed:
             subprocess.Popen([SCRIPT, "-w", ws], stdout=subprocess.DEVNULL,
                              stderr=subprocess.DEVNULL)
-        if changed:
-            log(f"refreshed {' '.join(changed)}")
+        rows = agent_rows(snap)
+        repushed = [pid for pid, (wanted, current) in rows.items() if wanted != current]
+        for pid in repushed:
+            push_agent_row(pid, rows[pid][0])
+        if changed or repushed:
+            ms = (time.monotonic() - t0) * 1000
+            log(f"refreshed spaces={' '.join(changed) or '-'} "
+                f"agents={' '.join(repushed) or '-'} in {ms:.0f}ms")
+
+    refresh()   # bring everything in line once at startup
 
     def schedule(delay=DEBOUNCE):
         with lock:
@@ -141,7 +243,10 @@ def main():
                 continue
             if "result" in msg:
                 continue
-            schedule()
+            # focus moves are what the user is waiting on: refresh at once.
+            # everything else (pane output revisions arrive at ~10 Hz while
+            # an agent streams) is debounced.
+            schedule(0 if msg.get("event") in FOCUS_EVENTS else DEBOUNCE)
     try:
         os.remove(PIDFILE)
     except OSError:

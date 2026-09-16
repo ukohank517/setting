@@ -113,16 +113,29 @@ rows = [
   [{ token = "$week", dim = true }],
 ]
 
+# claude row 1 is built from slots filled by pane-paths-watch.py so that agents
+# in the focused workspace and agents elsewhere can look different (a token
+# has one fixed style; herdr's own state_text cannot be restyled per pane):
+#   focused workspace : $name (tokyo-night subtext0, bold) + one of
+#                       $st_working / $st_blocked / $st_idle / $st_done in
+#                       herdr's state colours (yellow / red / green / teal)
+#   other workspaces  : $name_other + $st_other, both dim like the usage rows
+# only one slot of each pair is set, the empty ones are elided, so the row
+# still reads "● setting-42 · working". the state icon stays herdr's own and
+# keeps its colour everywhere. the focused entry is also marked by the
+# surface_dim row fill from [theme.custom].
 [ui.sidebar.agents.rows_by_agent]
 claude = [
-  # custom tokens render dim grey and, unlike the workspace token, get no
-  # focus-aware colour (herdr 0.8.0/0.9.0 config cannot express "when
-  # focused"). so mimic the unfocused workspace look: tokyo-night subtext0,
-  # bold, not dimmed. state_text keeps herdr's state colour (working yellow,
-  # blocked red, done teal, idle green) and is dimmed when unfocused. the
-  # focused entry is also marked by the surface_dim row fill from
-  # [theme.custom].
-  ["state_icon", { token = "$name", fg = "#a9b1d6", bold = true, dim = false }, "state_text"],
+  [
+    "state_icon",
+    { token = "$name", fg = "#a9b1d6", bold = true, dim = false },
+    { token = "$name_other", dim = true },
+    { token = "$st_working", fg = "#e0af68", dim = false },
+    { token = "$st_blocked", fg = "#f7768e", dim = false },
+    { token = "$st_idle", fg = "#9ece6a", dim = false },
+    { token = "$st_done", fg = "#1abc9c", dim = false },
+    { token = "$st_other", dim = true },
+  ],
   [{ token = "$ctx", dim = true }],
   [{ token = "$five", dim = true }],
   [{ token = "$week", dim = true }],

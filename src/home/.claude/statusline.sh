@@ -5,8 +5,12 @@
 # - mirrors the same data into this pane's rows in herdr's agents sidebar via
 #   pane metadata tokens (see [ui.sidebar.agents.rows_by_agent] in
 #   src/home/.config/herdr/config.toml):
-#     $name   claude code session name (what /list-agents and SendMessage
-#             use, e.g. "setting-42"); herdr puts its own state text after it
+#     $session  claude code session name (what /list-agents and SendMessage
+#               use, e.g. "setting-42"). not shown directly: pane-paths-watch.py
+#               copies it into $name (pane in the focused workspace, bright)
+#               or $name_other (any other workspace, dim), next to a state
+#               token it colours the same way, so agents of the selected
+#               workspace stand out from the rest.
 #     $ctx    context window usage of this session: bar, percent, then the
 #             agent name ("CTX ████░░░░ 17% claude"). the agent name rides in
 #             this token because herdr joins separate tokens with " · ".
@@ -89,9 +93,9 @@ fi
 if [ -n "$HERDR_PANE_ID" ] && [ -x "$HERDR_BIN" ]; then
     args=()
     if [ -n "$session_name" ]; then
-        args+=(--token "name=$session_name")
+        args+=(--token "session=$session_name")
     else
-        args+=(--clear-token name)
+        args+=(--clear-token session)
     fi
     if [ "$ctx" -ge 0 ]; then
         args+=(--token "ctx=CTX $(bar "$ctx") ${ctx}% claude")
