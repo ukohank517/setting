@@ -133,8 +133,9 @@ claude = [
 # instead ("~/path (branch)", set by the shell precmd hook and statusline.sh),
 # which is per pane rather than per workspace.
 #
-# $path1..$path6 list the cwd of every pane in the workspace (deduped, pane
-# order, ~/workspace/ prefix dropped). pushed by
+# $path1..$path6 list every pane in the workspace, one row each in pane
+# order: a state mark (● agent working, ◆ blocked, ○ idle, · plain shell)
+# and the pane's cwd with the ~/workspace/ prefix dropped. pushed by
 # ~/.config/herdr/report-pane-paths.sh from the shell precmd hook in
 # .zshrc/.bashrc and from statusline.sh; unused slots are cleared so the rows
 # collapse. MAX in that script must match the number of rows here.

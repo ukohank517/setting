@@ -1,8 +1,15 @@
 #!/bin/bash
 
-# push the cwd of every pane in a workspace into herdr's sidebar spaces rows
-# as $path1..$pathN workspace tokens (see [ui.sidebar.spaces] in config.toml).
-# herdr tracks pane cwds itself but has no built-in spaces token for them.
+# push one row per pane of a workspace into herdr's sidebar spaces rows as
+# $path1..$pathN workspace tokens (see [ui.sidebar.spaces] in config.toml):
+# "<state> <cwd>", e.g. "● ukohank517/setting". herdr tracks pane cwds and
+# agent states itself but has no built-in spaces token for either.
+#
+# the state mark mirrors herdr's state_dot() (src/ui/status.rs) in shape only,
+# since a token has a single colour: ● agent working, ◆ agent blocked
+# (herdr draws that as a red ●), ○ agent idle, · no agent (a plain shell).
+# it is refreshed whenever this script runs, i.e. on cd in a shell pane and
+# on every claude code status update, not on the state change itself.
 #
 # usage: report-pane-paths.sh [PANE_ID [CWD]]
 #   PANE_ID  any pane of the target workspace (default: $HERDR_PANE_ID)
@@ -46,20 +53,27 @@ ws=$(jq -r --arg p "$pane" \
     '.result.panes[] | select(.pane_id == $p) | .workspace_id' <<<"$list" | head -n1)
 [ -n "$ws" ] || exit 0
 
-# cwds of all panes in the workspace, pane order, duplicates dropped.
-paths=$(jq -r --arg ws "$ws" --arg p "$pane" --arg o "$override_cwd" '
-    [ .result.panes[]
-      | select(.workspace_id == $ws)
-      | if .pane_id == $p and $o != "" then $o else (.foreground_cwd // .cwd // empty) end
-    ] | reduce .[] as $x ([]; if any(.[]; . == $x) then . else . + [$x] end)
-    | .[]' <<<"$list")
+# "<state>\t<cwd>" for every pane in the workspace, pane order.
+rows=$(jq -r --arg ws "$ws" --arg p "$pane" --arg o "$override_cwd" '
+    .result.panes[]
+    | select(.workspace_id == $ws)
+    | [ (if .agent == null then "shell" else (.agent_status // "unknown") end),
+        (if .pane_id == $p and $o != "" then $o else (.foreground_cwd // .cwd // "") end)
+      ] | @tsv' <<<"$list")
 
 args=()
 i=0
-while IFS= read -r p; do
+width=$((width - 2))   # "<mark> " in front of every path
+while IFS=$'\t' read -r state p; do
     [ -n "$p" ] || continue
     i=$((i + 1))
     [ "$i" -gt "$MAX" ] && break
+    case "$state" in
+        working) mark="●" ;;
+        blocked) mark="◆" ;;
+        idle|done) mark="○" ;;
+        *) mark="·" ;;
+    esac
     p=${p#"$STRIP_PREFIX"}
     p=${p/#$HOME/~}   # an escaped \~ here would insert a literal backslash
     if [ "${#p}" -gt "$width" ]; then
@@ -76,8 +90,8 @@ while IFS= read -r p; do
             p="$ELLIPSIS${p: -$keep}"
         fi
     fi
-    args+=(--token "path$i=$p")
-done <<<"$paths"
+    args+=(--token "path$i=$mark $p")
+done <<<"$rows"
 for ((j = i + 1; j <= MAX; j++)); do
     args+=(--clear-token "path$j")
 done
