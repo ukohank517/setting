@@ -6,17 +6,23 @@
 #   sidebar spaces rows via workspace metadata ($usage / $week tokens,
 #   see [ui.sidebar.spaces] in src/home/.config/herdr/config.toml).
 #   account-wide values, so they are pinned to the top workspace only.
+# - mirrors this session's claude code session name (the one /list-agents and
+#   SendMessage use, e.g. "setting-42") into herdr's agents rows as a $name
+#   token, so each claude pane in the sidebar is labelled by session name.
 
 input=$(cat)
 
-IFS=$'\t' read -r model ctx five five_reset seven seven_reset <<EOF
+# every field gets a non-empty default: IFS=tab collapses consecutive tabs,
+# so an empty field would shift the ones after it.
+IFS=$'\t' read -r model ctx five five_reset seven seven_reset session_id <<EOF
 $(echo "$input" | jq -r '
   [ (.model.display_name // "?"),
     (.context_window.used_percentage // -1 | floor),
     (.rate_limits.five_hour.used_percentage // -1 | floor),
     (.rate_limits.five_hour.resets_at // 0),
     (.rate_limits.seven_day.used_percentage // -1 | floor),
-    (.rate_limits.seven_day.resets_at // 0)
+    (.rate_limits.seven_day.resets_at // 0),
+    (.session_id // "-")
   ] | @tsv')
 EOF
 
@@ -51,9 +57,25 @@ echo "$line"
 
 HERDR_BIN=$(command -v herdr || echo /opt/homebrew/bin/herdr)
 
-# per-pane row in herdr's agents sidebar: context usage + 5h reset
+# claude code's session name (what /list-agents shows). claude writes one
+# ~/.claude/sessions/<pid>.json per live session with sessionId and name;
+# match on session_id, falling back to our parent pid (the claude process).
+session_name=""
+if [ -n "$HERDR_PANE_ID" ] && hash jq 2>/dev/null; then
+    if [ "$session_id" != "-" ]; then
+        session_name=$(jq -r --arg sid "$session_id" \
+            'select(.sessionId == $sid) | .name // empty' \
+            ~/.claude/sessions/*.json 2>/dev/null | head -n1)
+    fi
+    if [ -z "$session_name" ] && [ -f ~/.claude/sessions/"$PPID".json ]; then
+        session_name=$(jq -r '.name // empty' ~/.claude/sessions/"$PPID".json 2>/dev/null)
+    fi
+fi
+
+# per-pane rows in herdr's agents sidebar: session name, context usage + 5h reset
 if [ -n "$HERDR_PANE_ID" ] && [ -x "$HERDR_BIN" ]; then
     args=()
+    [ -n "$session_name" ] && args+=(--token "name=$session_name")
     [ "$ctx" -ge 0 ] && args+=(--token "usage=CTX ${ctx}%")
     if [ "$five_reset" -gt 0 ]; then
         args+=(--token "reset=↻$(date -r "$five_reset" '+%m/%d %H:%M')")

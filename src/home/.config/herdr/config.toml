@@ -8,6 +8,16 @@
 #           one-dark, solarized, kanagawa, rose-pine, vesper
 name = "tokyo-night"
 
+[theme.custom]
+# active agent/space rows are filled with surface_dim, but tokyo-night defines
+# surface_dim == panel_bg (#1a1b26), so the fill is invisible and only the
+# workspace token's brighter text ever marked the focused entry. the agents
+# name row here uses $name instead (custom tokens get no focus styling in
+# herdr 0.8.0, see resolved_token_spans() in src/ui/sidebar.rs), so give the
+# fill a visible colour: tokyo-night's bg_highlight. also used for dividers,
+# separators and the scrollbar track, which become slightly more visible.
+surface_dim = "#292e42"
+
 [keys]
 # prefix key. ctrl+g is a plain terminal keystroke, so this works in any
 # terminal (ghostty, Terminal.app, ...) with no host-side setup.
@@ -72,9 +82,15 @@ prompt_new_tab_name = true
 # don't auto-copy mouse selections; selection stays until cmd+c copies it.
 copy_on_select = false
 
-# claude panes get an extra row with context usage and 5h reset time.
-# values are pushed by claude code's statusLine script (src/home/.claude/statusline.sh)
-# via `herdr pane report-metadata --token usage=... --token reset=...`.
+# claude panes: name row = claude code's session name ($name, the same name
+# /list-agents and SendMessage use, e.g. "setting-42"), then agent + state,
+# then context usage and 5h reset time. all $tokens are pushed by claude
+# code's statusLine script (src/home/.claude/statusline.sh) via
+# `herdr pane report-metadata --token name=... --token usage=... --token reset=...`.
+# the herdr default name row is workspace + tab; both are dropped here since
+# the workspace is already in the spaces list and tabs are not in use.
+# until the first statusline update of a session $name is empty, so the row
+# shows just the state icon for a moment.
 #
 # state_text spells the state out because state_icon alone is colour-only for
 # most of it: blocked, working and done all render the same filled dot and
@@ -83,7 +99,12 @@ copy_on_select = false
 # extra height and keeps the name row clear of the 26-column sidebar limit.
 [ui.sidebar.agents.rows_by_agent]
 claude = [
-  ["state_icon", "workspace", "tab"],
+  # custom tokens render dim grey and, unlike the workspace token, get no
+  # focus-aware colour (herdr 0.8.0/0.9.0 config cannot express "when
+  # focused"). so mimic the unfocused workspace look: tokyo-night subtext0,
+  # bold, not dimmed. the focused entry is marked by the surface_dim row fill
+  # from [theme.custom] instead.
+  ["state_icon", { token = "$name", fg = "#a9b1d6", bold = true, dim = false }],
   ["agent", "state_text"],
   [{ token = "$usage", dim = true }, { token = "$reset", dim = true }],
 ]
