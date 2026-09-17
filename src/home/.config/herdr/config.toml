@@ -118,7 +118,10 @@ rows = [
 # has one fixed style; herdr's own state_text cannot be restyled per pane):
 #   focused workspace : $name (tokyo-night subtext0, bold) + one of
 #                       $st_working / $st_blocked / $st_idle / $st_done in
-#                       herdr's state colours (yellow / red / green / teal)
+#                       herdr's state colours (yellow / red / green / teal;
+#                       the hex values are herdr's tokyo-night palette in
+#                       src/app/state.rs, not the upstream Tokyo Night ones,
+#                       so they match the state_icon dot exactly)
 #   other workspaces  : $name_other + $st_other, both dim like the usage rows
 # only one slot of each pair is set, the empty ones are elided, so the row
 # still reads "● setting-42 · working". the state icon stays herdr's own and
@@ -133,7 +136,7 @@ claude = [
     { token = "$st_working", fg = "#e0af68", dim = false },
     { token = "$st_blocked", fg = "#f7768e", dim = false },
     { token = "$st_idle", fg = "#9ece6a", dim = false },
-    { token = "$st_done", fg = "#1abc9c", dim = false },
+    { token = "$st_done", fg = "#7dcfff", dim = false },
     { token = "$st_other", dim = true },
   ],
   [{ token = "$ctx", dim = true }],
