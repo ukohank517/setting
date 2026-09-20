@@ -16,6 +16,18 @@ $st_working / $st_blocked / $st_idle / $st_done (state colours, focused
 workspace) or $st_other (dim). only one slot of each pair is set, the rest
 are cleared, so the row still reads "● setting-42 · working".
 
+herdr's agent state (working / idle / blocked / done) is announced by
+pane.agent_status_changed only, and that subscription is per pane: it needs
+a pane_id, "*" is rejected, and a request naming an unknown pane makes herdr
+close the connection. a connection also accepts exactly one events.subscribe
+(a second one closes it). so the general subscription below lives on one
+socket and every pane gets its own small socket subscribed to its status,
+opened and closed as panes come and go in the snapshot. without those the
+state text (the $st_* slots) lagged behind herdr's own state icon: an agent
+that stops printing goes working -> idle on herdr's quiet timer, which emits
+no pane.updated, so nothing woke the watcher until the next focus move or
+shell prompt.
+
 events are only a trigger, never trusted as a diff: herdr emits pane_focused /
 workspace_focused events on every workspace metadata update (including the
 ones this pipeline sends), which made a naive "refresh on focus event"
@@ -30,6 +42,7 @@ exits when the herdr socket closes, i.e. with the herdr server.
 """
 import json
 import os
+import selectors
 import socket
 import subprocess
 import sys
@@ -42,7 +55,9 @@ PIDFILE = os.path.join(HERDR_DIR, "pane-paths-watch.pid")
 SCRIPT = os.path.join(HERDR_DIR, "report-pane-paths.sh")
 DEBOUNCE = 0.05  # seconds of quiet before looking at the snapshot
 MIN_GAP = 0.15   # seconds between two refresh passes, whatever happens
-FOCUS_EVENTS = {"pane_focused", "workspace_focused"}  # refreshed without debounce
+# refreshed without debounce: the user is waiting on these
+URGENT_EVENTS = {"pane_focused", "workspace_focused",
+                 "pane_agent_status_changed", "pane.agent_status_changed"}
 
 SUBSCRIPTIONS = [
     "pane.focused", "workspace.focused", "pane.created", "pane.closed",
@@ -167,22 +182,43 @@ def main():
     with open(PIDFILE, "w") as f:
         f.write(str(os.getpid()))
 
-    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    def subscribe(subscriptions, request_id):
+        """open a socket with one events.subscribe on it (see module doc)."""
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.connect(SOCK)
+        req = {"id": request_id, "method": "events.subscribe",
+               "params": {"subscriptions": subscriptions}}
+        sock.sendall((json.dumps(req) + "\n").encode())
+        return sock
+
     try:
-        s.connect(SOCK)
+        main_sock = subscribe([{"type": t} for t in SUBSCRIPTIONS], "pane-paths-watch")
     except OSError as e:
         log(f"cannot connect to {SOCK}: {e}")
         return 1
-    req = {"id": "pane-paths-watch", "method": "events.subscribe",
-           "params": {"subscriptions": [{"type": t} for t in SUBSCRIPTIONS]}}
-    s.sendall((json.dumps(req) + "\n").encode())
     log("subscribed")
+
+    sel = selectors.DefaultSelector()
+    sel.register(main_sock, selectors.EVENT_READ, "main")
+    status_socks = {}   # pane_id -> socket subscribed to that pane's status
+    bufs = {}           # socket -> unread bytes
 
     lock = threading.Lock()
     work = threading.Lock()   # one refresh at a time (shared request socket)
     timer = [None]
     last = [{}]        # workspace fingerprints
-    last_pass = [0.0]
+    # time.monotonic() can start near zero with the process (macOS python),
+    # so seed this far enough back that the first refresh() runs
+    last_pass = [time.monotonic() - MIN_GAP]
+    panes = [None]     # pane ids of the latest snapshot, read by the main loop
+
+    def schedule(delay=DEBOUNCE):
+        with lock:
+            if timer[0]:
+                timer[0].cancel()
+            timer[0] = threading.Timer(delay, refresh)
+            timer[0].daemon = True
+            timer[0].start()
 
     def refresh():
         with lock:
@@ -200,6 +236,7 @@ def main():
         snap = snapshot()
         if snap is None:
             return
+        panes[0] = {p["pane_id"] for p in snap.get("panes", [])}
         current = fingerprints(snap)
         changed = [ws for ws, fp in current.items() if last[0].get(ws) != fp]
         last[0] = current
@@ -217,21 +254,43 @@ def main():
 
     refresh()   # bring everything in line once at startup
 
-    def schedule(delay=DEBOUNCE):
-        with lock:
-            if timer[0]:
-                timer[0].cancel()
-            timer[0] = threading.Timer(delay, refresh)
-            timer[0].daemon = True
-            timer[0].start()
+    def drop_status(pane_id):
+        sock = status_socks.pop(pane_id, None)
+        if sock is None:
+            return
+        sel.unregister(sock)
+        bufs.pop(sock, None)
+        sock.close()
 
-    buf = b""
-    while True:
-        chunk = s.recv(65536)
+    def sync_status_subs():
+        """one status subscription per pane in the latest snapshot.
+
+        only run from the main loop (the selector is not thread-safe); the
+        snapshot thread just publishes the pane set."""
+        wanted = panes[0]
+        if wanted is None:
+            return
+        for pane_id in list(status_socks):
+            if pane_id not in wanted:
+                drop_status(pane_id)
+        for pane_id in wanted:
+            if pane_id in status_socks:
+                continue
+            try:
+                sock = subscribe([{"type": "pane.agent_status_changed", "pane_id": pane_id}],
+                                 f"pane-paths-watch:status:{pane_id}")
+            except OSError as e:
+                log(f"status subscription for {pane_id} failed: {e}")
+                continue
+            status_socks[pane_id] = sock
+            sel.register(sock, selectors.EVENT_READ, pane_id)
+
+    def handle(sock, tag):
+        """read what arrived on one socket; False once it is gone."""
+        chunk = sock.recv(65536)
         if not chunk:
-            log("socket closed, exiting")
-            break
-        buf += chunk
+            return False
+        buf = bufs.get(sock, b"") + chunk
         while b"\n" in buf:
             line, buf = buf.split(b"\n", 1)
             try:
@@ -239,14 +298,36 @@ def main():
             except ValueError:
                 continue
             if "error" in msg:
-                log(f"error: {msg['error']}")
+                log(f"error on {tag}: {msg['error']}")
                 continue
             if "result" in msg:
                 continue
-            # focus moves are what the user is waiting on: refresh at once.
-            # everything else (pane output revisions arrive at ~10 Hz while
-            # an agent streams) is debounced.
-            schedule(0 if msg.get("event") in FOCUS_EVENTS else DEBOUNCE)
+            # focus moves and state changes are what the user is waiting
+            # on: refresh at once. everything else (pane output revisions
+            # arrive at ~10 Hz while an agent streams) is debounced.
+            schedule(0 if msg.get("event") in URGENT_EVENTS else DEBOUNCE)
+        bufs[sock] = buf
+        return True
+
+    while True:
+        sync_status_subs()
+        for key, _ in sel.select(timeout=1.0):
+            sock, tag = key.fileobj, key.data
+            try:
+                alive = handle(sock, tag)
+            except OSError:
+                alive = False
+            if alive:
+                continue
+            if tag == "main":
+                log("socket closed, exiting")
+                break
+            # herdr closes a status socket when its pane goes away (or
+            # rejected the pane); sync re-subscribes if the pane still exists
+            drop_status(tag)
+        else:
+            continue
+        break
     try:
         os.remove(PIDFILE)
     except OSError:
