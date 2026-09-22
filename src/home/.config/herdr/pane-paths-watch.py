@@ -12,9 +12,21 @@ has one fixed style, so each claude pane's name row is fed through slots
 (see [ui.sidebar.agents.rows_by_agent] in config.toml): the session name
 statusline.sh reports as $session is copied into $name (pane in the focused
 workspace, bright) or $name_other (dim); herdr's state goes into
-$st_working / $st_blocked / $st_idle / $st_done (state colours, focused
-workspace) or $st_other (dim). only one slot of each pair is set, the rest
+$st_working / $st_blocked / $st_idle / $st_done (state colours) or $st_other
+(dim, idle in a foreign workspace). only one slot of each pair is set, the rest
 are cleared, so the row still reads "● setting-42 · working".
+
+the state text also keeps its own "done". herdr's done means "finished
+while the tab was not on screen or the terminal window was not focused"
+(apply_pane_state_change in src/app/actions.rs), and it flips back to idle
+as soon as the window regains focus or the tab is shown, for every pane in
+the tab at once. the sidebar instead shows "done" when an agent finished
+while its pane was not the focused pane, and keeps it until that pane gets
+focus (UNACKED below). herdr's own done is honoured too. the state icon is
+still herdr's, so it can go green while the text stays blue. only the text
+is affected; herdr's notifications and `herdr agent wait` see herdr's state.
+working, blocked and this "done" are shown in their state colour in every
+workspace; only idle is dimmed in a foreign workspace (with the name).
 
 herdr's agent state (working / idle / blocked / done) is announced by
 pane.agent_status_changed only, and that subscription is per pane: it needs
@@ -81,6 +93,21 @@ def already_running():
 
 STATE_SLOTS = ("st_working", "st_blocked", "st_idle", "st_done", "st_other")
 NAME_SLOTS = ("name", "name_other")
+FINISHED = ("idle", "done")
+
+LAST_STATUS = {}   # pane_id -> herdr status in the previous snapshot
+UNACKED = set()    # panes that finished while not focused, until focused
+
+
+def display_status(pane_id, status, focused):
+    """herdr's status, with the sidebar's own "done" applied (see module doc)."""
+    prev = LAST_STATUS.get(pane_id)
+    LAST_STATUS[pane_id] = status
+    if focused or status not in FINISHED:
+        UNACKED.discard(pane_id)
+    elif status == "done" or prev == "working":
+        UNACKED.add(pane_id)
+    return "done" if pane_id in UNACKED else status
 
 
 class Client:
@@ -151,22 +178,33 @@ def agent_rows(snap):
     the snapshot shows for those slots, so a comparison catches tokens that
     went missing as well as ones that should change."""
     focused_ws = snap.get("focused_workspace_id")
+    focused_pane = snap.get("focused_pane_id")
     rows = {}
+    seen = set()
     for a in snap.get("agents", []):
+        pane_id = a["pane_id"]
+        seen.add(pane_id)
+        status = a.get("agent_status") or "unknown"
+        if status == "unknown":
+            status = "idle"   # herdr's state_label() renders unknown as idle
+        status = display_status(pane_id, status, pane_id == focused_pane)
         tokens = a.get("tokens") or {}
         session = tokens.get("session")
         if not session:
             continue
-        status = a.get("agent_status") or "unknown"
-        if status == "unknown":
-            status = "idle"   # herdr's state_label() renders unknown as idle
         same = a.get("workspace_id") == focused_ws
         name_slot = "name" if same else "name_other"
-        state_slot = f"st_{status}" if same else "st_other"
+        # a foreign workspace dims only idle; anything that wants attention
+        # (working / blocked / done) keeps its state colour everywhere
+        state_slot = f"st_{status}" if same or status != "idle" else "st_other"
         wanted = {slot: (session if slot == name_slot else None) for slot in NAME_SLOTS}
         wanted.update({slot: (status if slot == state_slot else None) for slot in STATE_SLOTS})
         current = {slot: tokens.get(slot) for slot in NAME_SLOTS + STATE_SLOTS}
-        rows[a["pane_id"]] = (wanted, current)
+        rows[pane_id] = (wanted, current)
+    for pane_id in list(LAST_STATUS):
+        if pane_id not in seen:   # pane closed or agent gone
+            LAST_STATUS.pop(pane_id, None)
+            UNACKED.discard(pane_id)
     return rows
 
 

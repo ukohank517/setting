@@ -122,11 +122,19 @@ rows = [
 #                       the hex values are herdr's tokyo-night palette in
 #                       src/app/state.rs, not the upstream Tokyo Night ones,
 #                       so they match the state_icon dot exactly)
-#   other workspaces  : $name_other + $st_other, both dim like the usage rows
+#   other workspaces  : $name_other (dim like the usage rows) + the same
+#                       coloured state slot, except idle, which is $st_other
+#                       (dim): working / blocked / done stay visible from
+#                       anywhere, a resting agent fades
 # only one slot of each pair is set, the empty ones are elided, so the row
 # still reads "● setting-42 · working". the state icon stays herdr's own and
 # keeps its colour everywhere. the focused entry is also marked by the
 # surface_dim row fill from [theme.custom].
+# "done" here is the watcher's own: an agent that finished while its pane was
+# not the focused pane shows "done" until that pane is focused. herdr's done
+# only means the tab was off screen or the window unfocused, and every pane
+# in the tab goes back to idle the moment the window is focused again, so the
+# icon can be green while the text is still "done".
 [ui.sidebar.agents.rows_by_agent]
 claude = [
   [
