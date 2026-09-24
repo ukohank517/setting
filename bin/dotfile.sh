@@ -17,9 +17,20 @@ source ./bin/sync_setting.sh
 # key is left alone. the timestamp hooks print display-only systemMessage
 # lines (💬 on prompt / 🤖 on response) that never reach the model. the time
 # is wrapped in \u001b[31m -- a raw ESC byte would be invalid json.
-function ensureClaudeSettings() {
-    SETTINGS=~/.claude/settings.json
-    FRAGMENT=./src/claude/settings-fragment.json
+#
+# the same merge is applied to ~/.claude.json (user-scope MCP servers live
+# under its mcpServers key, next to session metadata) with
+# src/claude/mcp-fragment.json. merge only adds/overwrites: a server removed
+# from the fragment must be removed by hand with `claude mcp remove <name>`.
+# OAuth tokens for MCP servers live in the Keychain, so a new machine still
+# needs a one-time `/mcp` -> Authenticate inside claude.
+# run this while claude is not running: it rewrites both files itself and a
+# concurrent write could drop the merge.
+#
+# mergeClaudeFragment <target json> <fragment json>
+function mergeClaudeFragment() {
+    SETTINGS=$1
+    FRAGMENT=$2
 
     echo ""
     echo "=== claude managed keys (${SETTINGS}) ==="
@@ -39,8 +50,9 @@ function ensureClaudeSettings() {
 
     TMP=$(mktemp)
     if jq -s '.[0] * .[1]' "$SETTINGS" "$FRAGMENT" > "$TMP" 2>/dev/null && [ -s "$TMP" ]; then
-        cp "$SETTINGS" "${SETTINGS}.bak"
-        mv "$TMP" "$SETTINGS"
+        # -p / cat > keep the target's mode (~/.claude.json is 600) on both copies
+        cp -p "$SETTINGS" "${SETTINGS}.bak"
+        cat "$TMP" > "$SETTINGS" && /bin/rm -f "$TMP"
         echo "merged: $(jq -r 'keys | join(", ")' "$FRAGMENT")"
         echo "        (backup: ${SETTINGS}.bak)"
     else
@@ -55,4 +67,5 @@ for GIT_FILE in $(find "$HOME_SRC" -type f ! -name .DS_Store | sort); do
     syncSettingFile "$REL_PATH" "$GIT_FILE" ~/"$REL_PATH"
 done
 
-ensureClaudeSettings
+mergeClaudeFragment ~/.claude/settings.json ./src/claude/settings-fragment.json
+mergeClaudeFragment ~/.claude.json         ./src/claude/mcp-fragment.json
