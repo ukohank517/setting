@@ -4,7 +4,9 @@
 # - prints a status line inside claude code
 #   ("@session(model) | context % | usage limits", e.g. "@setting-42(Fable) | CTX 4% | ...";
 #   the session name leads because it is what tells panes apart, the model
-#   rarely changes. it falls back to just the model when no name resolves)
+#   rarely changes. it falls back to just the model when no name resolves.
+#   colours follow the shell prompt in .bashrc/.zshrc: the session name is
+#   green like "user@host" there, the model red like the git branch)
 # - mirrors the same data into this pane's rows in herdr's agents sidebar via
 #   pane metadata tokens (see [ui.sidebar.agents.rows_by_agent] in
 #   src/home/.config/herdr/config.toml):
@@ -83,10 +85,14 @@ if hash jq 2>/dev/null; then
     fi
 fi
 
+# claude code renders ANSI colours in the status line
+green=$'\033[32m'
+red=$'\033[31m'
+reset=$'\033[0m'
 if [ -n "$session_name" ]; then
-    line="@$session_name($model)"
+    line="${green}@${session_name}${reset}(${red}${model}${reset})"
 else
-    line="$model"
+    line="${red}${model}${reset}"
 fi
 [ "$ctx" -ge 0 ] && line="$line | CTX ${ctx}%"
 [ -n "$usage5h" ] && line="$line | $usage5h"
