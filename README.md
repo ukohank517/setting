@@ -43,6 +43,8 @@ src/claude/         # ~/.claude/settings.json と ~/.claude.json に冪等マー
   `src/claude/settings-fragment.json` のキー (statusLine・時刻表示hooks など)
   だけを冪等にディープマージする (他のキーは保持、変更時は `.bak` を残す)。
   時刻表示hooksは送信/完了時刻 (⏰/✅) を画面にだけ出す。モデルには送られない。
+  fragment には env (NO_FLICKER)・tui・theme も含む。permissions や model は機体/気分で
+  変えるものなので入れない。
 - **claude code の MCP サーバー (`~/.claude.json` の `mcpServers`)**: 同じ要領で
   `src/claude/mcp-fragment.json` をディープマージする (user スコープ相当。`claude mcp list` に出る)。
   マージは追加/上書きのみなので、fragment から消したサーバーは `claude mcp remove <name>` で手動削除。
