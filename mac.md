@@ -36,6 +36,7 @@ claude statusline / hammerspoon / LaunchAgents (caps lock -> ctrl)。
 同期のあと、claude code の `~/.claude/settings.json` に
 `src/claude/settings-fragment.json` の管理キーをディープマージする
 (このファイルは claude code 自身が書き換えるので、丸ごとの同期はしない)。
+`src/claude/mcp-fragment.json` も同じ要領で `~/.claude.json` の `mcpServers` (user スコープの MCP 定義) へマージする。
 中身は statusLine (statusline.sh が動いて herdr のペイン行・spaces 行に
 使用量が出る) と、会話画面に送信/完了時刻を出す hooks (⏰/✅。表示専用で
 モデルには送られずトークン消費なし)。

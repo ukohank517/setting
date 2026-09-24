@@ -25,7 +25,7 @@ bin/
   dotfile.sh        # make dotfile: src/home/ 以下を ~ と同期 + claude 管理キーのマージ
   sync_setting.sh   #   └ 同期の共通関数 (diff表示・対話マージ・<shell>rc.local への退避)
 src/home/           # ~ をミラーした管理対象の設定ファイル群
-src/claude/         # ~/.claude/settings.json に冪等マージする管理キー (fragment)
+src/claude/         # ~/.claude/settings.json と ~/.claude.json に冪等マージする管理キー (fragment)
 ```
 
 ## ルール
@@ -43,3 +43,11 @@ src/claude/         # ~/.claude/settings.json に冪等マージする管理キ�
   `src/claude/settings-fragment.json` のキー (statusLine・時刻表示hooks など)
   だけを冪等にディープマージする (他のキーは保持、変更時は `.bak` を残す)。
   時刻表示hooksは送信/完了時刻 (⏰/✅) を画面にだけ出す。モデルには送られない。
+  fragment には env (NO_FLICKER)・tui・theme も含む。permissions や model は機体/気分で
+  変えるものなので入れない。
+- **claude code の MCP サーバー (`~/.claude.json` の `mcpServers`)**: 同じ要領で
+  `src/claude/mcp-fragment.json` をディープマージする (user スコープ相当。`claude mcp list` に出る)。
+  マージは追加/上書きのみなので、fragment から消したサーバーは `claude mcp remove <name>` で手動削除。
+  OAuth トークンは Keychain にあり git では運べないため、新しい PC では claude 起動後に
+  `/mcp` → Authenticate を一度通す。`make dotfile` は claude を動かしていないときに実行する
+  (claude 自身が両ファイルを書き換えるため)。
