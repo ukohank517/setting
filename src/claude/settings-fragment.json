@@ -29,5 +29,5 @@
     "CLAUDE_CODE_NO_FLICKER": "1"
   },
   "tui": "fullscreen",
-  "theme": "dark"
+  "theme": "custom:dark-ai"
 }
