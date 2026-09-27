@@ -51,3 +51,7 @@ src/claude/         # ~/.claude/settings.json と ~/.claude.json に冪等マー
   OAuth トークンは Keychain にあり git では運べないため、新しい PC では claude 起動後に
   `/mcp` → Authenticate を一度通す。`make dotfile` は claude を動かしていないときに実行する
   (claude 自身が両ファイルを書き換えるため)。
+- **claude code の「← で agents 一覧を開く」は無効**: 同じ `mcp-fragment.json` に
+  `leftArrowOpensAgents: false` を入れている (`~/.claude.json` のキー。`/config` の「← opens agents」と同じ)。
+  空の入力欄で ← を押すと会話がバックグラウンドに回り、誤操作で会話を見失うため。
+  agents 一覧そのものは `claude agents` で開ける。

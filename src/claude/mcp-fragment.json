@@ -1,4 +1,5 @@
 {
+  "leftArrowOpensAgents": false,
   "mcpServers": {
     "cloudflare": {
       "type": "http",
