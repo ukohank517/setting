@@ -1,8 +1,0 @@
-{
-  "name": "Dark + 紫",
-  "base": "dark",
-  "overrides": {
-    "userMessageBackground": "rgb(91, 58, 140)",
-    "userMessageBackgroundHover": "rgb(108, 72, 162)"
-  }
-}

@@ -1,0 +1,8 @@
+{
+  "name": "Dark + 葡萄",
+  "base": "dark",
+  "overrides": {
+    "userMessageBackground": "rgb(94, 48, 92)",
+    "userMessageBackgroundHover": "rgb(112, 62, 110)"
+  }
+}
