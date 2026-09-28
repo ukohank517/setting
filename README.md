@@ -45,8 +45,8 @@ src/claude/         # ~/.claude/settings.json と ~/.claude.json に冪等マー
   時刻表示hooksは送信/完了時刻 (⏰/✅) を画面にだけ出す。モデルには送られない。
   fragment には env (NO_FLICKER)・tui・theme も含む。permissions や model は機体/気分で
   変えるものなので入れない。
-  theme は `custom:dark-ai` (`src/home/.claude/themes/dark-ai.json`)。dark を土台に、
-  自分の発言の背景色だけ藍色にして会話の中で見分けやすくしている。
+  theme は `custom:dark-murasaki` (`src/home/.claude/themes/dark-murasaki.json`)。dark を土台に、
+  自分の発言の背景色だけ紫にして会話の中で見分けやすくしている (青系の選択色と被らない色)。
 - **claude code の MCP サーバー (`~/.claude.json` の `mcpServers`)**: 同じ要領で
   `src/claude/mcp-fragment.json` をディープマージする (user スコープ相当。`claude mcp list` に出る)。
   マージは追加/上書きのみなので、fragment から消したサーバーは `claude mcp remove <name>` で手動削除。
