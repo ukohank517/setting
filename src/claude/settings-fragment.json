@@ -42,7 +42,8 @@
       "Read(**/id_ed25519)",
       "Bash(sudo:*)"
     ],
-    "disableBypassPermissionsMode": "disable"
+    "disableBypassPermissionsMode": "disable",
+    "defaultMode": "auto"
   },
   "tui": "fullscreen",
   "theme": "custom:dark-budou"
