@@ -6,7 +6,9 @@
 #   the session name leads because it is what tells panes apart, the model
 #   rarely changes. it falls back to just the model when no name resolves.
 #   colours follow the shell prompt in .bashrc/.zshrc: the session name is
-#   green like "user@host" there, the model red like the git branch)
+#   green like "user@host" there, the model red like the git branch.
+#   when the line is wider than the terminal the parts wrap onto further
+#   rows instead of being cut to "..." by claude code, see below)
 # - mirrors the same data into this pane's rows in herdr's agents sidebar via
 #   pane metadata tokens (see [ui.sidebar.agents.rows_by_agent] in
 #   src/home/.config/herdr/config.toml):
@@ -90,13 +92,43 @@ green=$'\033[32m'
 red=$'\033[31m'
 reset=$'\033[0m'
 if [ -n "$session_name" ]; then
-    line="${green}@${session_name}${reset}(${red}${model}${reset})"
+    parts=("${green}@${session_name}${reset}(${red}${model}${reset})")
 else
-    line="${red}${model}${reset}"
+    parts=("${red}${model}${reset}")
 fi
-[ "$ctx" -ge 0 ] && line="$line | CTX ${ctx}%"
-[ -n "$usage5h" ] && line="$line | $usage5h"
-[ -n "$usage7d" ] && line="$line | $usage7d"
+[ "$ctx" -ge 0 ] && parts+=("CTX ${ctx}%")
+[ -n "$usage5h" ] && parts+=("$usage5h")
+[ -n "$usage7d" ] && parts+=("$usage7d")
+
+# claude code cuts a status line that is wider than the terminal to "..."
+# instead of wrapping it, but it renders every output line as its own row
+# and exports COLUMNS before running this script. so wrap by hand: pack the
+# parts into rows of at most COLUMNS cells, measured without the colour
+# escapes, and never split a part. without COLUMNS (run from a shell by
+# hand) everything stays on one row as before.
+# ${#s} counts bytes unless the locale is UTF-8, which would make the bars
+# (3 bytes a cell) wrap far too early.
+[ -z "$LC_ALL$LC_CTYPE$LANG" ] && export LC_CTYPE=en_US.UTF-8
+sep=" | "
+margin=2    # cells claude code indents the status line by
+width=$(( ${COLUMNS:-0} - margin ))
+visible_len() {
+    local s
+    s=$(printf '%s' "$1" | sed $'s/\033\\[[0-9;]*m//g')
+    printf '%s' "${#s}"
+}
+line=""
+for part in "${parts[@]}"; do
+    if [ -z "$line" ]; then
+        line="$part"
+    elif [ "$width" -gt 0 ] \
+        && [ $(( $(visible_len "$line") + ${#sep} + $(visible_len "$part") )) -gt "$width" ]; then
+        echo "$line"
+        line="$part"
+    else
+        line="$line$sep$part"
+    fi
+done
 echo "$line"
 
 HERDR_BIN=$(command -v herdr || echo /opt/homebrew/bin/herdr)
