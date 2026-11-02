@@ -15,7 +15,7 @@ source ./bin/sync_setting.sh
 # show a diff on every run. instead the keys in src/claude/settings-fragment.json
 # (statusLine, timestamp hooks, ...) are deep-merged into it and every other
 # key is left alone. the timestamp hooks print display-only systemMessage
-# lines (💬 on prompt / 🔧 before each tool call / 🤖 on response) that never
+# lines (💬 on prompt / ⏳ before each tool call / 🤖 on response) that never
 # reach the model. the time is wrapped in \u001b[31m -- a raw ESC byte would
 # be invalid json.
 #
