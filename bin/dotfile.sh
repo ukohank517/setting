@@ -15,8 +15,15 @@ source ./bin/sync_setting.sh
 # show a diff on every run. instead the keys in src/claude/settings-fragment.json
 # (statusLine, timestamp hooks, ...) are deep-merged into it and every other
 # key is left alone. the timestamp hooks print display-only systemMessage
-# lines (💬 on prompt / 🤖 on response) that never reach the model. the time
-# is wrapped in \u001b[31m -- a raw ESC byte would be invalid json.
+# lines (💬 on prompt / 🔧 before each tool call / 🤖 on response) that never
+# reach the model. the time is wrapped in \u001b[31m -- a raw ESC byte would
+# be invalid json.
+#
+# jq's `*` replaces lists, which is what permissions.deny wants, but under
+# "hooks" other tools add their own entries next to ours (herdr integration
+# installs one on PreToolUse etc.). so for each event the fragment defines,
+# the merged list is the local entries the fragment does not contain (compared
+# by their inner "hooks" commands) followed by the fragment's entries.
 #
 # the same merge is applied to ~/.claude.json (user-scope MCP servers live
 # under its mcpServers key, next to session metadata) with
@@ -43,22 +50,35 @@ function mergeClaudeFragment() {
     mkdir -p "$(dirname "$SETTINGS")"
     [ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
 
-    if jq -e -s '.[0] == (.[0] * .[1])' "$SETTINGS" "$FRAGMENT" >/dev/null 2>&1; then
+    MERGE_JQ='
+        def merge_hooks($local; $frag):
+            reduce ($frag | keys[]) as $ev ($local;
+                .[$ev] = (($local[$ev] // [])
+                          | map(select(.hooks as $h | ($frag[$ev] | any(.hooks == $h)) | not)))
+                         + $frag[$ev]);
+        . as [$local, $frag]
+        | ($local * $frag)
+        | if ($frag | has("hooks")) then .hooks = merge_hooks($local.hooks // {}; $frag.hooks) else . end
+    '
+
+    TMP=$(mktemp)
+    if ! jq -s "$MERGE_JQ" "$SETTINGS" "$FRAGMENT" > "$TMP" 2>/dev/null || [ ! -s "$TMP" ]; then
+        /bin/rm -f "$TMP"
+        echo "failed to update ${SETTINGS} (invalid json?). merge ${FRAGMENT} manually."
+        return 0
+    fi
+
+    if jq -e -s '.[0] == .[1]' "$SETTINGS" "$TMP" >/dev/null 2>&1; then
+        /bin/rm -f "$TMP"
         echo "OK: managed keys already set."
         return 0
     fi
 
-    TMP=$(mktemp)
-    if jq -s '.[0] * .[1]' "$SETTINGS" "$FRAGMENT" > "$TMP" 2>/dev/null && [ -s "$TMP" ]; then
-        # -p / cat > keep the target's mode (~/.claude.json is 600) on both copies
-        cp -p "$SETTINGS" "${SETTINGS}.bak"
-        cat "$TMP" > "$SETTINGS" && /bin/rm -f "$TMP"
-        echo "merged: $(jq -r 'keys | join(", ")' "$FRAGMENT")"
-        echo "        (backup: ${SETTINGS}.bak)"
-    else
-        /bin/rm -f "$TMP"
-        echo "failed to update ${SETTINGS} (invalid json?). merge ${FRAGMENT} manually."
-    fi
+    # -p / cat > keep the target's mode (~/.claude.json is 600) on both copies
+    cp -p "$SETTINGS" "${SETTINGS}.bak"
+    cat "$TMP" > "$SETTINGS" && /bin/rm -f "$TMP"
+    echo "merged: $(jq -r 'keys | join(", ")' "$FRAGMENT")"
+    echo "        (backup: ${SETTINGS}.bak)"
 }
 
 HOME_SRC=./src/home
