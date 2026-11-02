@@ -42,7 +42,9 @@ src/claude/         # ~/.claude/settings.json と ~/.claude.json に冪等マー
   (モデル・権限など) ため丸ごとは同期しない。`make dotfile` が
   `src/claude/settings-fragment.json` のキー (statusLine・時刻表示hooks など)
   だけを冪等にディープマージする (他のキーは保持、変更時は `.bak` を残す)。
-  時刻表示hooksは送信/完了時刻 (⏰/✅) を画面にだけ出す。モデルには送られない。
+  時刻表示hooksは送信 (💬)・ツール実行直前 (⏳)・完了 (🤖) の時刻を画面にだけ出す。
+  モデルには送られない。`hooks` の各イベント配列だけは置き換えではなく、ローカルにある
+  fragment 外のエントリ (herdr integration が入れるものなど) を残して fragment 側を足す。
   fragment には env (NO_FLICKER)・tui・theme も含む。permissions は機密ファイル
   (.env / 鍵 / ~/.ssh / ~/.aws) の Read と sudo を deny するリストと、bypass
   permissions モードの無効化 (`disableBypassPermissionsMode`)、起動時から auto mode に
